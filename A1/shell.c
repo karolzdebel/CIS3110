@@ -1,12 +1,37 @@
 
 #include "shell.h"
 
+/*Create a copy of a string*/
 static char *getCopy(char *buffer){
 	char *copy;
 	copy = malloc(sizeof(char)
 		*(strlen(buffer)+1));
 	strcpy(copy,buffer);
 	return copy;
+}
+
+/*Free args array*/
+void freeArgs(char ***args){
+	int i=0;
+	while ((*args)[i]){
+		free((*args)[i]);
+		i++;
+	}
+	free(*args);
+}
+
+bool isEmpty(char *string){
+	int i;
+
+	/*If a non white space character is found
+	  return false,return true otherwise*/
+	for (i=0;i<strlen(string);i++){
+		if (string[i] != ' ' && string[i] != '\t'
+			&& string[i] != '\n' && string[i] != '\r'){
+			return true;
+		}
+	}
+	return false;
 }
 
 char **getArgs(char *buffer){
@@ -28,6 +53,7 @@ char **getArgs(char *buffer){
 		exit(1);
 	}
 
+	/*Get all tokens seperated by a space*/
 	while (token != NULL){
 		tokenCount++;
 
@@ -66,6 +92,18 @@ char **getArgs(char *buffer){
 			strcpy(args[argNum-1],tokens[i]);
 		}
 	}
+	/*If no arguments were found, create
+	  an array with one empty string element*/
+	if (args == NULL){
+		args = malloc(sizeof(char*));
+		args[0] = malloc(sizeof(char));
+		args[0][0] = '\0';
+		argNum++;
+	}
+	/*Null terminate the array*/
+	args = realloc(args,sizeof(char*)
+		*(argNum+1));
+	args[argNum] = NULL;
 
 	/*Free token array*/
 	if (tokens != NULL){
@@ -75,6 +113,7 @@ char **getArgs(char *buffer){
 		free(tokens);
 	}
 
+	free(input);
 	return args;
 }
 char *getCommand(char *buffer){
@@ -84,18 +123,14 @@ char *getCommand(char *buffer){
 	input = getCopy(buffer);
 
 	/*Remove the new line*/
-	token = strtok(input,"\n");
-
-	/*Look for exit tokens*/
-	if (strcmp(input,"exit") == 0){
-		return "exit";
-	}
-
+	token = strtok(input,"\n");	
 	token = strtok(token," ");
+
 	command = malloc(sizeof(char)
 		*(strlen(token)+1));
 	strcpy(command,token);
 
 	free(input);
+
 	return command;
 }

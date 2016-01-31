@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,3 +15,5 @@
 
 char *getCommand(char *buffer);
 char **getArgs(char *buffer);
+bool isEmpty(char *string);
+void freeArgs(char ***args);
