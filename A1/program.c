@@ -30,9 +30,6 @@ int main(int argv,char **argc){
 	int status = 0,i=0,outinType;
 	Path *path=NULL;
 
-	childpids = NULL;
-	pidCount = 0;
-
 	initializePath(&path);
 	/*Get all directories inside path*/
 	dirs = getDirs();
