@@ -584,58 +584,26 @@ char **getArgs(char *buffer){
 		else{
 			tokens = realloc(tokens
 				,sizeof(char*)*tokenCount);
-		}
+		}	
 		
 		tokens[tokenCount-1] = malloc(sizeof(char)
 			*(strlen(token)+1));
 		strcpy(tokens[tokenCount-1],token);
 
 		token = strtok(NULL," ");
-	}
-
-	/*Store the name inside the args array*/
-	args = malloc(sizeof(char*));
-	args[0] = malloc(sizeof(char)
-		*(strlen(tokens[0])+1));
-	strcpy(args[0],tokens[0]);
-
-	/*Store all tokens that have the proper argument
-	  syntax in the argument array*/
-	argNum = 1;
-	for (i=0;i<tokenCount;i++){
-		if (tokens[i][0] == '-'){
-
-			argNum++;
-			args = realloc(args
-				,sizeof(char*)*argNum);
-			
-			args[argNum-1] = malloc(sizeof(char)
-				*(strlen(tokens[i])+1));
-			strcpy(args[argNum-1],tokens[i]);
+		if (token != NULL && (token[0] == '|' 
+			|| token[0] == '<' || token[0] == '>')){
+			break;
 		}
 	}
-	/*If no arguments were found, create
-	  an array with one empty string element*/
-	if (args == NULL){
-		args = malloc(sizeof(char*));
-		args[0] = malloc(sizeof(char));
-		args[0][0] = '\0';
-		argNum++;
-	}
+
 	/*Null terminate the array*/
-	args = realloc(args,sizeof(char*)
-		*(argNum+1));
-	args[argNum] = NULL;
+	tokens = realloc(tokens,sizeof(char*)
+		*(tokenCount+1));
+	tokens[tokenCount] = NULL;
 
-	/*Free token array*/
-	if (tokens != NULL){
-		for (i=0;i<tokenCount;i++){
-			free(tokens[i]);
-		}
-		free(tokens);
-	}
 	free(input);
-	return args;
+	return tokens;
 }
 char *getPipeCmd(char *buffer){
 	char *token,*input,*command;
