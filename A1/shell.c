@@ -561,9 +561,9 @@ char **getPipeArgs(char *buffer,char *name){
 }
 char **getArgs(char *buffer){
 
-	char **tokens=NULL,**args=NULL,*token;
+	char **tokens=NULL,*token;
 	char *input;
-	int i,tokenCount=0,argNum;
+	int tokenCount=0;
 
 	/*Copy the contents of buffer*/
 	input = getCopy(buffer);
