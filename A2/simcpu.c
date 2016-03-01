@@ -1,5 +1,9 @@
 #include "simcpu.h"
 
+static void printThread(void *print);
+static void printBurst(void *print);
+static void printProcess(void *print);
+
 static bool isEmpty(char *line){
 	for (int i=0;i<strlen(line);i++){
 		if (line[i] != ' ' && line[i] != '\t'){
@@ -52,9 +56,9 @@ static void initProcess(Process *process){
 	process->thread = NULL;
 }
 
-static void setProcess(Process *process, int threadNum
-	, int processNum){
-	process->threadCount = threadNum;
+static void setProcess(Process *process, int processNum
+	, int threadCount){
+	process->threadCount = threadCount;
 	process->processNum = processNum;
 }
 
@@ -212,7 +216,7 @@ static Thread *getThread(char *line){
 
 static Burst *getBurst(char *line){
 	char *token=NULL,*lineCopy;
-	int burstNum,cpuTm,IOTm;
+	int burstNum=0,cpuTm=0,IOTm=0;
 	Burst *burst=malloc(sizeof(Burst));
 
 	initBurst(burst);
@@ -248,7 +252,7 @@ static Burst *getBurst(char *line){
 	return burst;
 }
 
-static Simulation *FillSimProps(){
+static Simulation *fillSimProps(){
 	char *line=NULL;
 	int burstNum=0,threadNum=0,processNum=0;
 	bool finished = false;
@@ -267,6 +271,30 @@ static Simulation *FillSimProps(){
 		line = getLine();
 		if (!line){ break; }
 
+		/*Finished storing all thread properties*/	
+		if (state == burstprops && burstNum == 0){
+			if (threadNum > 0){				
+				state = threadprops;
+				threadNum--;
+			}
+			else if (processNum > 0){
+				state = processprops;
+				processNum--;
+			}
+		}
+		/*Finished storing all thread properties*/	
+		else if (state == threadprops && threadNum == 0){
+			if (processNum > 0){				
+				state = processprops;
+				processNum--;
+			}
+		}
+		else if (state == processprops){
+			if (processNum == 0){
+				finished = true;
+			}
+		}
+
 		switch(state){
 
 			case simulateprops:
@@ -278,29 +306,25 @@ static Simulation *FillSimProps(){
 					/*Create process list*/
 					createList(&processList);
 				}
-				sim->process = processList;
+				createList(&(sim->process));
 
 				break;
 
 			case processprops:
 
-				/*Finished storing all process properties*/
-				if (processNum == 0){
-					finished = true;
-					break;
-				}
 				curProcess = getProcess(line);
 				threadNum = curProcess->threadCount;
 
 				if (curProcess->threadCount > 0){
 					/*Create thread list*/
-					if (!threadList){ createList(&threadList); }
+					if (!curProcess->thread){
+						createList(&(curProcess->thread));
+					}
 				}
 
 				/*Add process to list*/
-				addToList(processList,curProcess);
+				addToList(sim->process,curProcess);
 
-				/*Get next threads properties*/
 				if (threadNum > 0){
 					state = threadprops;
 				}
@@ -308,46 +332,40 @@ static Simulation *FillSimProps(){
 
 			case threadprops:
 
-				/*Finished storing all thread properties*/	
-				if (threadNum == 0){
-					state = processprops;
-					processNum--;
-					break;
-				}
-
 				curThread = getThread(line);
 				burstNum = curThread->burstCount;
 
 				if (curThread->burstCount > 0){
 					/*Create burst list*/
-					if (!burstList){ createList(&burstList); }
+					if (!curThread->burst){
+						createList(&(curThread->burst));
+					}
 				}
 
 				/*Add thread to list*/
-				addToList(threadList,curThread);
+				addToList(curProcess->thread,curThread);
 
 				/*Get next bursts properties*/
 				if (burstNum > 0){
 					state = burstprops;
 				}
+
 				break;
 
 			case burstprops:
-
-				/*Finished storing all thread properties*/	
-				if (burstNum == 0){
-					state = threadprops;
-					threadNum--;
-					break;
-				}
 
 				/*Get next burst*/
 				curBurst = getBurst(line);
 
 				/*Add burst to list*/
-				addToList(burstList,curBurst);
+				addToList(curThread->burst,curBurst);
 
 				burstNum--;
+				if (burstNum == 0){
+					state = threadprops;	
+					threadNum--;
+				}
+
 				break;
 		}
 
@@ -358,10 +376,79 @@ static Simulation *FillSimProps(){
 	return sim;
 }
 
-static void *printProcess(void *print){
-	Process *proc = (Process*)print; 
+static void printProcess(void *print){
+	Process *proc = (Process*)print;
 
-	printf("threadCount:%d\n",proc->threadCount);
+	printf("processNum:%d\tthreadCount:%d\n"
+		,proc->processNum,proc->threadCount);
+}
+
+static void printThread(void *print){
+	Thread *thread = (Thread*)print;
+	
+	printf("threadNum:%d\tburstCount:%d\tarrivalTm:%d\n"
+		,thread->threadNum,thread->burstCount,thread->arrivalTm);
+}
+
+static void printBurst(void *print){
+	Burst *burst = (Burst*)print;
+
+	printf("burstNum:%d\tcpuTm:%d\tIOTm:%d\n"
+		,burst->burstNum,burst->cpuTm,burst->IOTm);
+}
+
+static void printSimulation(Simulation *sim){
+	Process *process;
+	Thread *thread;
+	Node *procNext;
+	Node *threadNext;
+	Node *burstNext;
+
+	printf("-----Simulation Properties-----\n");
+	printf("processCount:%d\tsameSwitchTm:%d\tdiffSwitchTm:%d\n"
+		,sim->processCount,sim->sameSwitchTm,sim->diffSwitchTm);
+	printf("--------------------------------\n");
+
+	printf("-----------Process------------\n");
+
+	/*Traverse processes and print each one*/
+	procNext = getHead(sim->process);
+	if (!procNext){ return; }
+
+	do{
+		printNode(*procNext,printProcess);
+
+		/*Traverse threads and print each one*/
+		process = getData(procNext);
+
+		if (process->thread){
+			threadNext = getHead(process->thread);
+
+			do{
+				printNode(*threadNext,printThread);
+
+				/*Traverse bursts and print each one*/
+				thread = getData(threadNext);
+				if (thread->burst){
+					burstNext = getHead(thread->burst);	
+					do{
+						printNode(*burstNext,printBurst);
+						burstNext = getNext(burstNext);
+
+					}while(burstNext);
+				}
+
+				threadNext = threadNext->next;
+
+			}while(threadNext);
+
+		}
+
+		procNext = getNext(procNext);
+
+	}while(procNext);
+
+	printf("----------------------------------\n");
 }
 
 int main(int argc, char **argv){
@@ -387,7 +474,8 @@ int main(int argc, char **argv){
 		}
 	}
 
-	simulation = FillSimProps();
+	simulation = fillSimProps();
+	printSimulation(simulation);
 
 	return 0;
 }

@@ -39,6 +39,18 @@ static void printNodes(Node *node, void (*printFunct)(void *)){
 	}
 }
 
+extern Node *getHead(List *list){
+	return list->first;
+}
+
+extern Node *getNext(Node *node){
+	return node->next;
+}
+
+extern void *getData(Node *node){
+	return node->data;
+}
+
 extern void addToList(List *list,void *add){
 	Node *next;
 
@@ -87,3 +99,6 @@ extern void printList(List list, void (*printFunct)(void*)){
 		printNodes(list.first,printFunct);
 	}
 }
+ extern void printNode(Node node, void (*printFunct)(void*)){
+ 	printFunct(node.data);
+ }
