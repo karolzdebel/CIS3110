@@ -519,11 +519,11 @@ static void freeSimulation(Simulation **sim){
 }
 
 int threadCmp(const void *a,const void *b){
-	Node *node1 = (Node*)a;
-	Node *node2 = (Node*)b;
+	Node *node1 = *((Node**)a);
+	Node *node2 = *((Node**)b);
 	Thread *thread1 = getData(node1);
+	printf("thread1 arrtime: %d\n",thread1->arrivalTm);
 	Thread *thread2 = getData(node2);
-
 	return (thread1->arrivalTm - thread2->arrivalTm);
 }
 
@@ -541,7 +541,7 @@ static Queue *sortThreads(Simulation *data){
 	/*Add threads from all processes to array*/
 	node = getHead(data->process);
 	while(node){
-		proc = getData(node);
+		proc = (Process*)getData(node);
 
 		/*Check if threads present in process*/
 		if (proc->threadCount > 0){
@@ -558,11 +558,12 @@ static Queue *sortThreads(Simulation *data){
 			}
 
 			/*Add threads to array*/
-			i=0;
 			curThread = getHead(proc->thread);
 			while (curThread){
+				Thread *testThread = getData(curThread);
 				threadarr[i] = curThread;
 				i++;
+				curThread = getNext(curThread);
 			}
 
 		}
@@ -570,7 +571,7 @@ static Queue *sortThreads(Simulation *data){
 	}
 	
 	/*Sort the array of thread nodes*/
-	qsort(threads,count,sizeof(Node*),threadCmp);
+	qsort(threadarr,count,sizeof(Node*),threadCmp);
 
 	return threads;
 }
@@ -685,10 +686,10 @@ int main(int argc, char **argv){
 
 	/*Get all simulation data from stdin*/
 	simulation = fillSimProps();
-	printSimulationData(simulation);
+	//printSimulationData(simulation);
 
 	/*Run simulation using data gathered*/
-
+	simFCFS(simulation);
 
 	/*Free simulation data*/
 	freeSimulation(&simulation);
