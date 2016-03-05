@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /*List node*/
 typedef struct Node {
@@ -11,9 +12,16 @@ typedef struct Node {
 
 /*List of elements*/
 typedef struct List {
-	int count;			//Number of proccesses in the list
+	int count;			//Number of elements in the list
 	Node *first;		//First element in the list
 } List;
+
+/*Queue of elements*/
+typedef struct Queue{
+	int count;			//Number of elements in the queue
+	Node *first;		//First element in the queue
+	Node *last;			//Last element in the queeu
+} Queue;
 
 /*********************************************************************
  * FUNCTION NAME: addToList
@@ -73,6 +81,44 @@ extern Node *getNext(Node *node);
  * RETURNS:   . Address of the data(void *).
  *********************************************************************/
 extern void *getData(Node *node);
+/*********************************************************************
+ * FUNCTION NAME: freeNodes
+ * PURPOSE: Free the node, and all nodes after it.
+ * ARGUMENTS: . Node that is linked to preceeding nodes(Node *node).
+ *			  . Function that frees data in that node and takes
+ * 				the data as an argument (void (*freeData)(void *)).
+ *********************************************************************/
+extern void freeNodes(Node *node, void (*freeData)(void *));
+/*********************************************************************
+ * FUNCTION NAME: createQueue
+ * PURPOSE: Initialize and allocate memory for a queue.
+ * ARGUMENTS: . Address of the pointer to the queue to be 
+ *				created(Queue **queue).
+ *********************************************************************/
+extern void createQueue(Queue **queue);
+/*********************************************************************
+ * FUNCTION NAME: pop
+ * PURPOSE: Remove last node in the queue.
+ * ARGUMENTS: . Queue that the node is being removed 
+ *              from(Queue *que).
+ * RETURNS: Address of the node that was removed (Node *).
+ *********************************************************************/
+extern Node *pop(Queue *queue);
+/*********************************************************************
+ * FUNCTION NAME: push
+ * PURPOSE: Add a node to the queue.
+ * ARGUMENTS: . Queue the node is being added to(Queue *queue).
+ *			  . Node that is being added to the queue(Node *node).
+ *********************************************************************/
+extern void push(Queue *queue, Node *node);
+/*********************************************************************
+ * FUNCTION NAME: emptyQueue
+ * PURPOSE: Checks whether queue is empty.
+ * ARGUMENTS: . Queue being checked for empty(Queue *queue).
+ * RETURNS: Whether the queue is empty(Bool).
+ *********************************************************************/
+extern bool emptyQueue(Queue *queue);
+
 
 #define _LIST_H
 #endif
