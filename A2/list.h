@@ -31,12 +31,22 @@ typedef struct Queue{
  *********************************************************************/
 extern void addToList(List *list,void *add);
 /*********************************************************************
- * FUNCTION NAME: removeListNode
+ * FUNCTION NAME: removeListHard
+ * PURPOSE: Remove node from the list and free associated data.
+ * ARGUMENTS: . List the node is being removed from(List *list).
+ *			  . Position to be removed from (int pos).
+ *			  . Function which frees the 
+ *				data(void (*freeData)(void *)).
+ *********************************************************************/
+extern void removeListHard(List *list,int pos
+	,void (*freeData)(void *));
+/*********************************************************************
+ * FUNCTION NAME: removeListSoft
  * PURPOSE: Remove node from the list without freeing the data.
  * ARGUMENTS: . List the node is being removed from(List *list).
  *			  . Position to be removed from (int pos).
  *********************************************************************/
-extern void removeListNode(List *list,int pos);
+extern void removeListSoft(List *list,int pos);
 /*********************************************************************
  * FUNCTION NAME: createList
  * PURPOSE: Free memory allocated to list.
@@ -44,6 +54,13 @@ extern void removeListNode(List *list,int pos);
  * 			  . Function that frees node data.
  *********************************************************************/
 extern void createList(List **list);
+/*********************************************************************
+ * FUNCTION NAME: mergeList
+ * PURPOSE: Add contents of one list to the other and free the other.
+ * ARGUMENTS: . List to be be added to (List *list).
+ * 			  . List being added than free'd(List *add).
+ *********************************************************************/
+extern void mergeList(List *list, List *add);
 /*********************************************************************
  * FUNCTION NAME: getListNode
  * PURPOSE: Get any node in the list.
@@ -111,7 +128,7 @@ extern void *getData(Node *node);
  *			  . Function that frees data in that node and takes
  * 				the data as an argument (void (*freeData)(void *)).
  *********************************************************************/
-extern void freeNodes(Node *node, void (*freeData)(void *));
+extern void freeNodeHard(Node *node, void (*freeData)(void *));
 /*********************************************************************
  * FUNCTION NAME: createQueue
  * PURPOSE: Initialize and allocate memory for a queue.

@@ -54,7 +54,7 @@ extern void addToList(List *list,void *add){
 	list->count++;
 }
 
-extern void removeListNode(List *list,int pos){
+extern void removeListSoft(List *list,int pos){
 	Node *next,*temp;
 
 	/*Remove from position 1*/
@@ -89,6 +89,45 @@ extern void removeListNode(List *list,int pos){
 	list->count--;
 }
 
+extern void removeListHard(List *list,int pos
+	,void (*freeData)(void *)){
+
+	Node *next,*temp;
+
+	/*Remove from position 1*/
+	if (pos == 1){
+		temp = list->first;
+		if (list->count > 1){
+			list->first = list->first->next;
+		}
+		else{
+			list->first = NULL;
+		}
+		freeData(getData(temp));
+		free(temp);
+		list->count--;
+		return;
+	}
+
+	/*Remove from middle or end*/
+	next = getHead(list);
+	for (int i=0;i<pos-2;i++){
+		next = getNext(next);
+	}
+	temp = next->next;
+	/*Remove from middle*/
+	if (pos < list->count){
+		next->next = next->next->next;
+	}
+	/*Remove from last*/
+	else{
+		next->next = NULL;
+	}
+	freeData(getData(temp));
+	free(temp);
+	list->count--;
+}
+
 extern Node *getListNode(List *list,int pos){
 	Node *next;
 
@@ -111,6 +150,11 @@ extern void freeNodesSoft(Node *node){
 	if (node->next){
 		freeNodesSoft(node->next);
 	}
+	free(node);
+}
+
+extern void freeNodeHard(Node *node, void (*freeData)(void *)){
+	freeData(node->data);
 	free(node);
 }
 
@@ -138,6 +182,26 @@ extern void printList(List list, void (*printFunct)(void*)){
 	if (list.first){
 		printNodes(list.first,printFunct);
 	}
+}
+
+extern void mergeList(List *list, List *add){
+	Node *nodeOrig,*headAdd;
+
+	headAdd = getHead(add);
+
+	/*If original list is empty*/
+	if (!list->first){
+		list->first = headAdd;
+	}
+	/*Add to end of current list*/
+	else{
+		nodeOrig = getHead(list);
+		while(getNext(nodeOrig)){
+			nodeOrig = getNext(nodeOrig);
+		} 
+		nodeOrig->next = getHead(add);
+	}
+	free(add);
 }
 
 extern void printNode(Node node, void (*printFunct)(void*)){

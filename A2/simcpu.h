@@ -35,7 +35,7 @@ typedef enum SimState{
 typedef struct StateEvent {
 	int time;				//Time an event occurred
 	int threadNum;			//Thread number
-	int procNum;			//Process number
+	int processNum;			//Process number
 	SimState from;			//State switched from
 	SimState to;			//State switched to
 } StateEvent;
@@ -89,7 +89,8 @@ typedef struct SimulationRes {
 	int totalTm;			//Total time
 	double avgTurnTm;		//Average turnaround time
 	int cpuUtil;			//CPU utilization
-	List *threadRes;
+	List *threadRes;		//Thread results
+	List *stateEvents;		//State changes that occured
 } SimulationRes;
 
 /*Simulate structure*/
