@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 #include "list.h"
 
 #define _FCFS 0				//First come first serve
@@ -31,13 +32,24 @@ typedef enum SimState{
 } SimState;
 
 /*Event structure*/
-typedef struct Event {
+typedef struct StateEvent {
 	int time;				//Time an event occurred
 	int threadNum;			//Thread number
 	int procNum;			//Process number
 	SimState from;			//State switched from
 	SimState to;			//State switched to
-} Event;
+} StateEvent;
+
+/*Burst Simulation Structure*/
+typedef struct SimEvent {
+	int arrivalTm;			//Arrival time of event
+	int cpuTm;				//Number of CPU time
+	int IOTm;				//Number of IO time
+	int processNum;			//Process number of event
+	int sameSwitchTm;		//Switch time in same process
+	int diffSwitchTm; 		//Switch time in different process
+	int threadNum; 			//Thread number associated with event
+} SimEvent;
 
 /*Burst structure*/
 typedef struct BurstData {
@@ -62,7 +74,7 @@ typedef struct ThreadData {
 	int threadNum;			//Thread number
 	int burstCount;			//number of CPU bursts
 	int arrivalTm;			//Arrival time
-	List *burst; 			//List of bursts
+	List *burst; 			//Queue of bursts
 } Thread;
 
 /*Process structure*/
@@ -77,6 +89,7 @@ typedef struct SimulationRes {
 	int totalTm;			//Total time
 	double avgTurnTm;		//Average turnaround time
 	int cpuUtil;			//CPU utilization
+	List *threadRes;
 } SimulationRes;
 
 /*Simulate structure*/

@@ -31,18 +31,41 @@ typedef struct Queue{
  *********************************************************************/
 extern void addToList(List *list,void *add);
 /*********************************************************************
- * FUNCTION NAME: initList
- * PURPOSE: Initialize a list.
- * ARGUMENTS: . List to be initialized(List list).
+ * FUNCTION NAME: removeListNode
+ * PURPOSE: Remove node from the list without freeing the data.
+ * ARGUMENTS: . List the node is being removed from(List *list).
+ *			  . Position to be removed from (int pos).
  *********************************************************************/
-extern void createList(List **list);
+extern void removeListNode(List *list,int pos);
 /*********************************************************************
  * FUNCTION NAME: createList
  * PURPOSE: Free memory allocated to list.
  * ARGUMENTS: . List to be free'd (List **list).
  * 			  . Function that frees node data.
  *********************************************************************/
-extern void freeList(List **list, void (*freeData)(void *));
+extern void createList(List **list);
+/*********************************************************************
+ * FUNCTION NAME: getListNode
+ * PURPOSE: Get any node in the list.
+ * ARGUMENTS: . List which contains the node (List **list).
+ * 			  . Position of the node.
+ * RETURNS: Address of the node found at given position
+ *			in the list(Node *).
+ *********************************************************************/
+extern Node *getListNode(List *list,int pos);
+/*********************************************************************
+ * FUNCTION NAME: freeListHard
+ * PURPOSE: Free memory allocated to list and all data.
+ * ARGUMENTS: . List to be free'd (List **list).
+ * 			  . Function that frees node data.
+ *********************************************************************/
+extern void freeListHard(List **list, void (*freeData)(void *));
+/*********************************************************************
+ * FUNCTION NAME: freeListSoft
+ * PURPOSE: Free memory allocated to list but not data.
+ * ARGUMENTS: . List to be free'd (List **list).
+ *********************************************************************/
+extern void freeListSoft(List **list);
 /*********************************************************************
  * FUNCTION NAME: printList
  * PURPOSE: Print all list data.
@@ -110,7 +133,7 @@ extern Node *pop(Queue *queue);
  * ARGUMENTS: . Queue the node is being added to(Queue *queue).
  *			  . Node that is being added to the queue(Node *node).
  *********************************************************************/
-extern void push(Queue *queue, Node *node);
+extern void push(Queue *queue, void *node);
 /*********************************************************************
  * FUNCTION NAME: emptyQueue
  * PURPOSE: Checks whether queue is empty.
@@ -118,7 +141,36 @@ extern void push(Queue *queue, Node *node);
  * RETURNS: Whether the queue is empty(Bool).
  *********************************************************************/
 extern bool emptyQueue(Queue *queue);
-
+/*********************************************************************
+ * FUNCTION NAME: top
+ * PURPOSE: Gets the first node in the queue.
+ * ARGUMENTS: . Queue that contains the node(Queue *queue).
+ * RETURNS: Address of the first node in the queue(Node *).
+ *********************************************************************/
+extern Node *getFirst(Queue *queue);
+/*********************************************************************
+ * FUNCTION NAME: freeQueueHard
+ * PURPOSE: Free memory allocated for a queue and all data.
+ * ARGUMENTS: . Pointer to the address of the queue to be 
+ *				freed(Queue **queue).
+ *			  . Function which frees node 
+ *				data(void (*freeData)(void *)).
+ *********************************************************************/
+extern void freeQueueHard(Queue **queue, void (*freeData)(void *));
+/*********************************************************************
+ * FUNCTION NAME: freeQueueSoft
+ * PURPOSE: Free memory allocated for a queue but not the data.
+ * ARGUMENTS: . Pointer to the address of the queue to be 
+ *				freed(Queue **queue).
+ *********************************************************************/
+extern void freeQueueSoft(Queue **queue);
+/*********************************************************************
+ * FUNCTION NAME: emptyList
+ * PURPOSE: Checks whether list is empty.
+ * ARGUMENTS: . List to be checked(List *list).
+ * RETURNS: Whether the list is empty(Bool).
+ *********************************************************************/
+extern bool emptyList(List *list);
 
 #define _LIST_H
 #endif

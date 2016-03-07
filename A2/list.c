@@ -1,13 +1,6 @@
 #include "list.h"
 
 /*********************************************************************
- * FUNCTION NAME: initNode
- * PURPOSE: Initialize a node.
- * ARGUMENTS: . Node to be initialized(Node node).
- * RETURNS: CalError based on if a 'V' was found.
- *********************************************************************/
-static void initNode(Node node);
-/*********************************************************************
  * FUNCTION NAME: printNodes
  * PURPOSE: Print node, and all the following nodes in order.
  * ARGUMENTS: . Node that is linked to preceeding nodes(Node *node).
@@ -61,24 +54,78 @@ extern void addToList(List *list,void *add){
 	list->count++;
 }
 
-extern void freeNodes(Node *node, void (*freeData)(void *)){
+extern void removeListNode(List *list,int pos){
+	Node *next,*temp;
+
+	/*Remove from position 1*/
+	if (pos == 1){
+		temp = list->first;
+		if (list->count > 1){
+			list->first = list->first->next;
+		}
+		else{
+			list->first = NULL;
+		}
+		free(temp);
+		list->count--;
+		return;
+	}
+
+	/*Remove from middle or end*/
+	next = getHead(list);
+	for (int i=0;i<pos-2;i++){
+		next = getNext(next);
+	}
+	temp = next->next;
+	/*Remove from middle*/
+	if (pos < list->count){
+		next->next = next->next->next;
+	}
+	/*Remove from last*/
+	else{
+		next->next = NULL;
+	}
+	free(temp);
+	list->count--;
+}
+
+extern Node *getListNode(List *list,int pos){
+	Node *next;
+
+	next = getHead(list);
+	for (int i=0;i<pos-1;i++){
+		next = getNext(next);
+	}
+	return next;
+}
+
+extern void freeNodesHard(Node *node, void (*freeData)(void *)){
 	if (node->next){
-		freeNodes(node->next,freeData);
+		freeNodesHard(node->next,freeData);
 	}
 	freeData(node->data);
 	free(node);
 }
 
-extern void freeList(List **list, void (*freeData)(void *)){
+extern void freeNodesSoft(Node *node){
+	if (node->next){
+		freeNodesSoft(node->next);
+	}
+	free(node);
+}
+
+extern void freeListHard(List **list, void (*freeData)(void *)){
 	if ((*list)->first){
-		freeNodes((*list)->first,freeData);
+		freeNodesHard((*list)->first,freeData);
 	}
 	free(*list);
 }
 
-static void initNode(Node node){
-	node.data = NULL;
-	node.next = NULL;
+extern void freeListSoft(List **list){
+	if ((*list)->first){
+		freeNodesSoft((*list)->first);
+	}
+	free(*list);
 }
 
 extern void createList(List **list){
@@ -107,23 +154,63 @@ extern void createQueue(Queue **queue){
 extern bool emptyQueue(Queue *queue){
 	return (queue->count == 0);
 }
-extern void push(Queue *que, Node *node){
-	Node *temp = que->last;
+
+extern bool emptyList(List *list){
+	return (list->count == 0);
+}
+
+extern void push(Queue *que, void *data){
+	Node *temp,*add;
 	
+	add = malloc(sizeof(Node));
+	add->data = data;
+	add->next = NULL;
+
 	if (!que->first){
-		que->first = node;
-		que->last = node;
+		que->first = add;
+		que->last = add;
+	}
+	else{
+		temp = que->last;
+		que->last = add;
+		add->next = temp;
 	}
 
-	que->last = node;
-	node->next = temp;
 	que->count++;
 }
 
 extern Node *pop(Queue *que){
+
+	if (que->count == 0){
+		return NULL;
+	}
+
 	Node *temp = que->last;
 	que->last = que->last->next;
+	if (que->count == 1){
+		que->first = NULL;
+	}
 	que->count--;
 
 	return temp;
+}
+
+extern Node *getFirst(Queue *queue){
+	return queue->first;
+}
+
+extern void freeQueueHard(Queue **queue, void (*freeData)(void *)){
+	if ((*queue)->last){
+		freeNodesHard((*queue)->last,freeData);
+	}
+	free(*queue);
+}
+extern void freeQueueSoft(Queue **queue){
+	Node *next;
+	next = pop(*queue);
+	while(next){
+		free(next);
+		next = pop(*queue);
+	}
+	free(*queue);
 }
