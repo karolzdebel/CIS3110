@@ -66,6 +66,7 @@ static void initThreadRes(ThreadRes *res){
 	res->turnTm=0;
 	res->finishTm=0;
 	res->IOTm=0;
+	res->threadNum=0;
 }
 
 // static void initSimEvent(SimEvent *event){
@@ -645,14 +646,44 @@ static Queue *getSortedEvents(Simulation *data){
 	return events;
 }
 
-static List *waitSim(List *waitingList,Queue *readyQueue,int curTime){
-	int pos=0;
+/*Returns 0 if not present*/
+static ThreadRes *getThreadRes(List *threadRes, int processNum
+	,int threadNum){
+
+	Node *node = getHead(threadRes);
+	ThreadRes *data;
+
+	/*If empty return NULL*/
+	if (!node){
+		return NULL;
+	}
+
+	/*Traverse searching for match*/
+	do{
+		data = getData(node);
+
+		/*compare process and thread number*/
+		if (data->processNum == processNum 
+			&& data->threadNum == threadNum){
+
+			return data;
+		}
+	}while((node = getNext(node)));
+
+	/*Return 0 if not found*/
+	return NULL;
+}
+
+static List *waitSim(List *waitingList,Queue *readyQueue,int curTime
+	, List *threadEvents){
+	int pos=0,curProcessNum=0,curThreadNum=0;
 	bool removed = false;
 	List *eventInfo = NULL;
 	Node *waitNode;
 	SimEvent *waitEvent;
 	StateEvent *stateEvent;
 	SimState stateFrom=blocked,stateTo=blocked;
+	ThreadRes *threadRes=NULL;
 
 	createList(&eventInfo);
 
@@ -662,9 +693,17 @@ static List *waitSim(List *waitingList,Queue *readyQueue,int curTime){
 		pos++;
 		waitEvent = getData(waitNode);
 
+		/*Get thread result node associated with event*/
+		curProcessNum = waitEvent->processNum;
+		curThreadNum = waitEvent->threadNum;
+
+		/*Get the thread result from the list*/
+		threadRes = getThreadRes(threadEvents
+			,curProcessNum,curThreadNum);
+
 		/*Simulate one time unit*/
 		waitEvent->IOTm--;	
-		assert(waitEvent->IOTm > -1);
+		threadRes->IOTm++;		
 
 		/*If event is done IO*/
 		if (waitEvent->IOTm == 0){
@@ -675,14 +714,16 @@ static List *waitSim(List *waitingList,Queue *readyQueue,int curTime){
 			else{ stateTo = ready; }
 
 			/*Record state change and add to list*/
-				waitEvent = getData(getListNode(waitingList,pos));
-				setStateEvent(stateEvent,curTime,waitEvent->threadNum
-					,waitEvent->processNum,stateFrom,stateTo);
-				addToList(eventInfo,stateEvent);
+			waitEvent = getData(getListNode(waitingList,pos));
+			setStateEvent(stateEvent,curTime,waitEvent->threadNum
+				,waitEvent->processNum,stateFrom,stateTo);
+			addToList(eventInfo,stateEvent);
 
 			/*Event is complete therefore terminated*/
 			if (waitEvent->cpuTm == 0){
 				removeListHard(waitingList,pos,free);
+				threadRes->turnTm = curTime-threadRes->arrivalTm;
+				threadRes->finishTm = curTime;
 			}
 
 			/*Event goes back to ready queue since cpu time is left*/
@@ -709,40 +750,11 @@ static List *waitSim(List *waitingList,Queue *readyQueue,int curTime){
 	return eventInfo;
 }
 
-/*Returns 0 if not present*/
-static ThreadRes *getThreadRes(List *threadRes, int processNum
-	,int threadNum){
-
-	int pos=0;
-	Node *node = getHead(threadRes);
-	ThreadRes *data;
-
-	/*If empty return NULL*/
-	if (!node){
-		return NULL;
-	}
-
-	/*Traverse searching for match*/
-	while(getNext(node)){
-		pos++;
-		data = getData(node);
-
-		/*compare process and thread number*/
-		if (data->processNum == processNum 
-			&& data->threadNum == threadNum){
-
-			return data;
-		}
-		node = getNext(node);
-	}
-
-	/*Return 0 if not found*/
-	return NULL;
-}
-
 static SimulationRes *simFCFS(Simulation *data){
 
 	int curTime = 0,curProcessNum=0,curThreadNum=0;
+	int turnTm=0,resNum=0,noUtilTm=0;
+	double cpuUtil=0;
 	SimulationRes *res;
  	Queue *eventQueue = NULL,*readyQueue=NULL;
  	SimEvent *curEvent=NULL;
@@ -766,7 +778,8 @@ static SimulationRes *simFCFS(Simulation *data){
 		/*Go through waiting list and decrease I/O time
 		, get a list of state changes(events) that happened*/
 		createQueue(&readyQueue);
-		eventList = waitSim(waitingList,readyQueue,curTime);
+		eventList = waitSim(waitingList,readyQueue,curTime
+			,res->threadRes);
 		mergeList(res->stateEvents,eventList);
 
 		/*Add ready bursts to event queue*/
@@ -785,25 +798,36 @@ static SimulationRes *simFCFS(Simulation *data){
 		curEvent = getData(simNode);
 		curEvent->cpuTm--;
 
-		/*Get thread result node associated with event*/
+		/*Add context switch time if switching threads*/
+		if (curThreadNum != curEvent->threadNum){
+			if (curProcessNum != curEvent->processNum){
+				curTime += curEvent->diffSwitchTm;
+			}
+			else{
+				curTime += curEvent->sameSwitchTm;
+
+			}	
+		}
+
 		curProcessNum = curEvent->processNum;
 		curThreadNum = curEvent->threadNum;
-		/*Found in list*/
+		/*Get thread result node associated with event*/
 		if (getThreadRes(res->threadRes
 			,curProcessNum,curThreadNum)){
-
 			/*Get the thread result from the list*/
 			threadRes = getThreadRes(res->threadRes
 				,curProcessNum,curThreadNum);
 		}
 		/*Not found in list*/
 		else{
-			/*Create and add to list*/
+			/*Create initialize and add to list*/
 			threadRes = malloc(sizeof(ThreadRes));
 			initThreadRes(threadRes);
+			threadRes->threadNum =curEvent->threadNum;
+			threadRes->processNum = curEvent->processNum;
+			threadRes->arrivalTm = curEvent->arrivalTm;
 			addToList(res->threadRes,threadRes);
 		}
-
 
 		/*Check whether burst is done*/
 		if (curEvent->cpuTm == 0){
@@ -815,6 +839,8 @@ static SimulationRes *simFCFS(Simulation *data){
 			}
 			/*Remove event since it is done*/
 			else{
+				threadRes->finishTm = curTime;
+				threadRes->turnTm = curTime-threadRes->arrivalTm;
 				free(getData(simNode));
 				free(simNode);
 			}
@@ -823,8 +849,35 @@ static SimulationRes *simFCFS(Simulation *data){
 			push(eventQueue,getData(simNode));
 			free(simNode);
 		}
+
+		/*Check if CPU is being utilized*/
+		if (emptyQueue(eventQueue) 
+			&& !emptyList(waitingList)){
+
+			noUtilTm++;
+		}
+
+		threadRes->serviceTm++;
 		curTime++;
 	}
+
+	/*Store total time*/
+	res->totalTm = curTime;
+	/*Get average turnaround time*/
+	node = getHead(res->threadRes);
+	while(node){
+		threadRes = getData(node);
+
+		resNum++;
+		turnTm += threadRes->finishTm-threadRes->arrivalTm;
+
+		node = getNext(node);
+	}
+	res->avgTurnTm = turnTm/resNum;
+	/*Get CPU Util*/
+	cpuUtil = ((double)res->totalTm-noUtilTm)
+		/res->totalTm;
+	res->cpuUtil = (int)(cpuUtil*100);
 
 	/*Use free() since structures are empty*/
 	free(eventQueue);
@@ -877,8 +930,8 @@ static void printThreadRes(void *data){
 
 	printf("Thread %d of Process %d:\n"
 		,thread->threadNum,thread->processNum );
-	printf("arrival time: %d\n",thread->arrivalTm);
-	printf("serivce time: %d units, I/O time: %d units"
+	printf(" arrival time: %d\n",thread->arrivalTm);
+	printf(" serivce time: %d units, I/O time: %d units"
 		,thread->serviceTm,thread->IOTm);
 	printf(", turnaround time: %d units, finish time: %d units\n"
 		,thread->turnTm,thread->finishTm);
@@ -907,7 +960,7 @@ static void printSimState(SimState state){
 static void printStateEvent(void *data){
 	StateEvent *event = (StateEvent*)data;
 
-	printf("At time %d: Thread %d of Process %d moves from"
+	printf("At time %d: Thread %d of Process %d moves from "
 		,event->time,event->threadNum,event->processNum);
 	printSimState(event->from);
 	printf(" to ");
@@ -919,21 +972,23 @@ static void printResults(SimulationRes *res
 	, bool detInfo, bool verbMode, int timeQuant){
 
 	if (timeQuant == 0){
-		printf("FCFS Scheduling\n");
+		printf("\nFCFS Scheduling\n");
 	}
 	else{
 		printf("Round Robin Scheduling(quantum = %d time units)\n"
 			,timeQuant);
 	}
 	printf("Total Time required is: %d units\n",res->totalTm);
-	printf("Average Turnaround Time is %f time units\n"
+	printf("Average Turnaround Time is %.2f time units\n"
 		,res->avgTurnTm);
-	printf("CPU Utilization is %d%%",res->cpuUtil);
+	printf("CPU Utilization is %d%%\n",res->cpuUtil);
 
 	if (detInfo){
+		printf("\n");
 		printList(*res->threadRes,printThreadRes);
 	}
 	if (verbMode){
+		printf("\n");
 		printList(*res->stateEvents,printStateEvent);
 	}
 }
@@ -941,7 +996,7 @@ static void printResults(SimulationRes *res
 
 int main(int argc, char **argv){
 	bool detInfo=false,verbMode=false;
-	int robQuantum;
+	int robQuantum=0;
 	Simulation *simulation=NULL;
 	SimulationRes *simResults=NULL;
 
