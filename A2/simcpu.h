@@ -40,17 +40,6 @@ typedef struct StateEvent {
 	SimState to;			//State switched to
 } StateEvent;
 
-/*Burst Simulation Structure*/
-typedef struct SimEvent {
-	int arrivalTm;			//Arrival time of event
-	int cpuTm;				//Number of CPU time
-	int IOTm;				//Number of IO time
-	int processNum;			//Process number of event
-	int sameSwitchTm;		//Switch time in same process
-	int diffSwitchTm; 		//Switch time in different process
-	int threadNum; 			//Thread number associated with event
-} SimEvent;
-
 /*Burst structure*/
 typedef struct BurstData {
 	int burstNum;			//Burst number
@@ -58,38 +47,25 @@ typedef struct BurstData {
 	int IOTm;				//Number of IO time
 } Burst;
 
-/*Thread simulation stats structure*/
-typedef struct ThreadRes {
-	int threadNum; 			//Thread number
+/*Thread data structure*/
+typedef struct ThreadData {
+	int threadNum;			//Thread number
+	int processNum;			//Associated process number
+	int burstCount;			//number of CPU bursts
 	int arrivalTm;			//Arrival time
 	int serviceTm;			//Serivce time
 	int turnTm;				//Turnaround time
 	int finishTm;			//Finish time
-	int IOTm;				//IO Time
-	int processNum; 		//Associated process num
-} ThreadRes;
-
-/*Thread data structure*/
-typedef struct ThreadData {
-	int threadNum;			//Thread number
-	int burstCount;			//number of CPU bursts
-	int arrivalTm;			//Arrival time
+	int IOTm;				//IO Time used
 	List *burst; 			//Queue of bursts
 } Thread;
-
-/*Process structure*/
-typedef struct ProcessData {
-	int processNum;			//Process number
-	int threadCount;		//Number of threads 
-	List *thread;			//List of threads
-} Process;
 
 /*Simulation results*/
 typedef struct SimulationRes {
 	int totalTm;			//Total time
 	double avgTurnTm;		//Average turnaround time
 	int cpuUtil;			//CPU utilization
-	List *threadRes;		//Thread results
+	List *threads;			//Thread results
 	List *stateEvents;		//State changes that occured
 } SimulationRes;
 
@@ -97,10 +73,10 @@ typedef struct SimulationRes {
 typedef struct SimulationData {
 	SimType type;			//Type of simulation
 	int rrQuantum;			//Round robin time quantum
-	int processCount;		//Number of processes
 	int sameSwitchTm;		//Thread time switch in same proc
 	int diffSwitchTm;		//Thread time switch in diff proc
-	List *process;			//List of processes
+	int processCount;
+	List *threads;			//Queue of threads
 } Simulation;
 
 #define SIMCPU_H

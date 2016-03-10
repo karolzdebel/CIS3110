@@ -54,7 +54,48 @@ extern void addToList(List *list,void *add){
 	list->count++;
 }
 
-extern void removeListSoft(List *list,int pos){
+extern void insert(List *list,void *add, int pos){
+	Node *next,*temp=NULL;
+
+	/*Add to first position*/
+	if (pos == 1){
+		if (list->first){
+			temp = list->first;
+		}
+		list->first = malloc(sizeof(Node));
+		list->first->next = NULL;
+		list->first->data = add;
+		if (temp){
+			list->first->next = temp;
+		}
+	}
+
+	else{
+		/*Traverse to node before position in the list*/
+		next = getHead(list);
+		for (int i=0;i<pos-2;i++){
+			next = getNext(next);
+		}
+		/*Add to middle*/
+		if (next->next){		
+			temp = next->next;
+			next->next = malloc(sizeof(Node));
+			next->next->data = add;
+			next->next->next = temp;
+		}
+		/*Add to last*/
+		else{
+			next->next = malloc(sizeof(Node));
+			next->next->data = add;
+			next->next->next = NULL;
+		}
+
+	}
+
+	list->count++;
+}
+
+extern void removeSoft(List *list,int pos){
 	Node *next,*temp;
 
 	/*Remove from position 1*/
@@ -89,7 +130,7 @@ extern void removeListSoft(List *list,int pos){
 	list->count--;
 }
 
-extern void removeListHard(List *list,int pos
+extern void removeHard(List *list,int pos
 	,void (*freeData)(void *)){
 
 	Node *next,*temp;
@@ -113,7 +154,7 @@ extern void removeListHard(List *list,int pos
 	next = getHead(list);
 	for (int i=0;i<pos-2;i++){
 		next = getNext(next);
-	}
+	} 
 	temp = next->next;
 	/*Remove from middle*/
 	if (pos < list->count){
@@ -128,7 +169,7 @@ extern void removeListHard(List *list,int pos
 	list->count--;
 }
 
-extern Node *getListNode(List *list,int pos){
+extern Node *getNode(List *list,int pos){
 	Node *next;
 
 	next = getHead(list);
@@ -158,14 +199,14 @@ extern void freeNodeHard(Node *node, void (*freeData)(void *)){
 	free(node);
 }
 
-extern void freeListHard(List **list, void (*freeData)(void *)){
+extern void freeHard(List **list, void (*freeData)(void *)){
 	if ((*list)->first){
 		freeNodesHard((*list)->first,freeData);
 	}
 	free(*list);
 }
 
-extern void freeListSoft(List **list){
+extern void freeSoft(List **list){
 	if ((*list)->first){
 		freeNodesSoft((*list)->first);
 	}
@@ -208,73 +249,20 @@ extern void printNode(Node node, void (*printFunct)(void*)){
  	printFunct(node.data);
 }
 
-extern void createQueue(Queue **queue){
-	*queue = malloc(sizeof(Queue));
-	(*queue)->count = 0;
-	(*queue)->first = NULL;
-	(*queue)->last = NULL;
-}
-
-extern bool emptyQueue(Queue *queue){
-	return (queue->count == 0);
-}
-
-extern bool emptyList(List *list){
+extern bool empty(List *list){
 	return (list->count == 0);
 }
 
-extern void push(Queue *que, void *data){
-	Node *temp,*add;
-	
-	add = malloc(sizeof(Node));
-	add->data = data;
-	add->next = NULL;
-
-	if (!que->first){
-		que->first = add;
-		que->last = add;
-	}
-	else{
-		temp = que->last;
-		que->last = add;
-		add->next = temp;
-	}
-
-	que->count++;
+extern void push(List *que, void *data){	
+	insert(que,data, que->count+1);
 }
 
-extern Node *pop(Queue *que){
-
-	if (que->count == 0){
-		return NULL;
-	}
-
-	Node *temp = que->last;
-	que->last = que->last->next;
-	if (que->count == 1){
-		que->first = NULL;
-	}
-	que->count--;
-
-	return temp;
+extern void *pop(List *que){
+	void *data = getData(getNode(que,1));
+	removeSoft(que,1);
+	return data;
 }
 
-extern Node *getFirst(Queue *queue){
-	return queue->first;
-}
-
-extern void freeQueueHard(Queue **queue, void (*freeData)(void *)){
-	if ((*queue)->last){
-		freeNodesHard((*queue)->last,freeData);
-	}
-	free(*queue);
-}
-extern void freeQueueSoft(Queue **queue){
-	Node *next;
-	next = pop(*queue);
-	while(next){
-		free(next);
-		next = pop(*queue);
-	}
-	free(*queue);
+extern void *getTop(List *queue){
+	return getData(queue->first);
 }

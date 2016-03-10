@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <assert.h>
 
 /*List node*/
 typedef struct Node {
@@ -14,14 +15,8 @@ typedef struct Node {
 typedef struct List {
 	int count;			//Number of elements in the list
 	Node *first;		//First element in the list
+	Node *last;
 } List;
-
-/*Queue of elements*/
-typedef struct Queue{
-	int count;			//Number of elements in the queue
-	Node *first;		//First element in the queue
-	Node *last;			//Last element in the queeu
-} Queue;
 
 /*********************************************************************
  * FUNCTION NAME: addToList
@@ -29,7 +24,7 @@ typedef struct Queue{
  * ARGUMENTS: . List for the element to be added to(List *list).
  *			  . Element to be added(void *add).
  *********************************************************************/
-extern void addToList(List *list,void *add);
+extern void insert(List *list,void *add,int pos);
 /*********************************************************************
  * FUNCTION NAME: removeListHard
  * PURPOSE: Remove node from the list and free associated data.
@@ -38,7 +33,7 @@ extern void addToList(List *list,void *add);
  *			  . Function which frees the 
  *				data(void (*freeData)(void *)).
  *********************************************************************/
-extern void removeListHard(List *list,int pos
+extern void removeHard(List *list,int pos
 	,void (*freeData)(void *));
 /*********************************************************************
  * FUNCTION NAME: removeListSoft
@@ -46,7 +41,7 @@ extern void removeListHard(List *list,int pos
  * ARGUMENTS: . List the node is being removed from(List *list).
  *			  . Position to be removed from (int pos).
  *********************************************************************/
-extern void removeListSoft(List *list,int pos);
+extern void removeSoft(List *list,int pos);
 /*********************************************************************
  * FUNCTION NAME: createList
  * PURPOSE: Free memory allocated to list.
@@ -69,20 +64,20 @@ extern void mergeList(List *list, List *add);
  * RETURNS: Address of the node found at given position
  *			in the list(Node *).
  *********************************************************************/
-extern Node *getListNode(List *list,int pos);
+extern Node *getNode(List *list,int pos);
 /*********************************************************************
  * FUNCTION NAME: freeListHard
  * PURPOSE: Free memory allocated to list and all data.
  * ARGUMENTS: . List to be free'd (List **list).
  * 			  . Function that frees node data.
  *********************************************************************/
-extern void freeListHard(List **list, void (*freeData)(void *));
+extern void freeHard(List **list, void (*freeData)(void *));
 /*********************************************************************
  * FUNCTION NAME: freeListSoft
  * PURPOSE: Free memory allocated to list but not data.
  * ARGUMENTS: . List to be free'd (List **list).
  *********************************************************************/
-extern void freeListSoft(List **list);
+extern void freeSoft(List **list);
 /*********************************************************************
  * FUNCTION NAME: printList
  * PURPOSE: Print all list data.
@@ -107,6 +102,13 @@ extern void printList(List list, void (*printFunct)(void*));
  *********************************************************************/
 extern Node *getHead(List *list);
 /*********************************************************************
+ * FUNCTION NAME: emptyList
+ * PURPOSE: Checks whether list is empty.
+ * ARGUMENTS: . List to be checked(List *list).
+ * RETURNS: Whether the list is empty(Bool).
+ *********************************************************************/
+extern bool empty(List *list);
+/*********************************************************************
  * FUNCTION NAME: getNext
  * PURPOSE: Gets next node in the list.
  * ARGUMENTS: . Address of the previous node to the one you
@@ -128,14 +130,15 @@ extern void *getData(Node *node);
  *			  . Function that frees data in that node and takes
  * 				the data as an argument (void (*freeData)(void *)).
  *********************************************************************/
-extern void freeNodeHard(Node *node, void (*freeData)(void *));
+extern void freeNodesHard(Node *node, void (*freeData)(void *));
 /*********************************************************************
- * FUNCTION NAME: createQueue
- * PURPOSE: Initialize and allocate memory for a queue.
- * ARGUMENTS: . Address of the pointer to the queue to be 
- *				created(Queue **queue).
+ * FUNCTION NAME: freeNodeHard
+ * PURPOSE: Free node and its data.
+ * ARGUMENTS: . Node to be free'd(Node *node).
+ *			  . Function which free's on the 
+ *				node(void (*freeData)(void *)).
  *********************************************************************/
-extern void createQueue(Queue **queue);
+ extern void freeNodeHard(Node *node, void (*freeData)(void *));
 /*********************************************************************
  * FUNCTION NAME: pop
  * PURPOSE: Remove last node in the queue.
@@ -143,51 +146,20 @@ extern void createQueue(Queue **queue);
  *              from(Queue *que).
  * RETURNS: Address of the node that was removed (Node *).
  *********************************************************************/
-extern Node *pop(Queue *queue);
+extern void *pop(List *que);
 /*********************************************************************
  * FUNCTION NAME: push
  * PURPOSE: Add a node to the queue.
  * ARGUMENTS: . Queue the node is being added to(Queue *queue).
  *			  . Node that is being added to the queue(Node *node).
  *********************************************************************/
-extern void push(Queue *queue, void *node);
+extern void push(List *queue, void *node);
 /*********************************************************************
- * FUNCTION NAME: emptyQueue
- * PURPOSE: Checks whether queue is empty.
- * ARGUMENTS: . Queue being checked for empty(Queue *queue).
- * RETURNS: Whether the queue is empty(Bool).
+ * FUNCTION NAME: getTop
+ * PURPOSE: Get top of queue.
+ * ARGUMENTS: . Queue which contains the data(List *queue).
+ * RETURNS: . Data associated with the top node(void *).
  *********************************************************************/
-extern bool emptyQueue(Queue *queue);
-/*********************************************************************
- * FUNCTION NAME: top
- * PURPOSE: Gets the first node in the queue.
- * ARGUMENTS: . Queue that contains the node(Queue *queue).
- * RETURNS: Address of the first node in the queue(Node *).
- *********************************************************************/
-extern Node *getFirst(Queue *queue);
-/*********************************************************************
- * FUNCTION NAME: freeQueueHard
- * PURPOSE: Free memory allocated for a queue and all data.
- * ARGUMENTS: . Pointer to the address of the queue to be 
- *				freed(Queue **queue).
- *			  . Function which frees node 
- *				data(void (*freeData)(void *)).
- *********************************************************************/
-extern void freeQueueHard(Queue **queue, void (*freeData)(void *));
-/*********************************************************************
- * FUNCTION NAME: freeQueueSoft
- * PURPOSE: Free memory allocated for a queue but not the data.
- * ARGUMENTS: . Pointer to the address of the queue to be 
- *				freed(Queue **queue).
- *********************************************************************/
-extern void freeQueueSoft(Queue **queue);
-/*********************************************************************
- * FUNCTION NAME: emptyList
- * PURPOSE: Checks whether list is empty.
- * ARGUMENTS: . List to be checked(List *list).
- * RETURNS: Whether the list is empty(Bool).
- *********************************************************************/
-extern bool emptyList(List *list);
-
+extern void *getTop(List *queue);
 #define _LIST_H
 #endif
