@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 #include "list.h"
 
 #define _FCFS 0				//First come first serve
@@ -57,6 +58,7 @@ typedef struct ThreadData {
 	int turnTm;				//Turnaround time
 	int finishTm;			//Finish time
 	int IOTm;				//IO Time used
+	List *finished;			//List of finished 
 	List *burst; 			//Queue of bursts
 } Thread;
 
@@ -64,8 +66,8 @@ typedef struct ThreadData {
 typedef struct SimulationRes {
 	int totalTm;			//Total time
 	double avgTurnTm;		//Average turnaround time
-	int cpuUtil;			//CPU utilization
-	List *threads;			//Thread results
+	double cpuUtil;			//CPU utilization
+	List *thread;			//Thread results
 	List *stateEvents;		//State changes that occured
 } SimulationRes;
 
@@ -75,7 +77,7 @@ typedef struct SimulationData {
 	int rrQuantum;			//Round robin time quantum
 	int sameSwitchTm;		//Thread time switch in same proc
 	int diffSwitchTm;		//Thread time switch in diff proc
-	int processCount;
+	int processCount;		//Process count
 	List *threads;			//Queue of threads
 } Simulation;
 
