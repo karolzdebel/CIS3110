@@ -58,6 +58,7 @@ typedef struct ThreadData {
 	int turnTm;				//Turnaround time
 	int finishTm;			//Finish time
 	int IOTm;				//IO Time used
+	int readyTime;			//Time entered ready queue
 	List *finished;			//List of finished 
 	List *burst; 			//Queue of bursts
 } Thread;

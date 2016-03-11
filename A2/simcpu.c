@@ -4,8 +4,8 @@
 static void printThread(void *print){
 	Thread *thread = (Thread*)print;
 	
-	printf("processNum:%d\tthreadNum:%d\tburstCount:%d\tarrivalTm:%d\n"
-		,thread->processNum,thread->threadNum,thread->burstCount,thread->arrivalTm);
+	printf("processNum:%d\tthreadNum:%d\tburstCount:%d\treadyTime:%d\tarrivalTm:%d\n"
+		,thread->processNum,thread->threadNum,thread->burstCount,thread->readyTime,thread->arrivalTm);
 }
 
 static void printBurst(void *print){
@@ -437,38 +437,38 @@ static void freeSimulation(Simulation **sim){
 int threadCmp(const void *a,const void *b){
 	Thread *thread1 = *((Thread**)a);
 	Thread *thread2 = *((Thread**)b);
-	return (thread1->arrivalTm - thread2->arrivalTm);
+	return (thread1->readyTime - thread2->readyTime);
 }
 
-// static void sortThreads(List *threads){
-// 	int threadNum;
-// 	Node *node=NULL;
-// 	Thread **threadarr=NULL;
+static void sortThreads(List *threads){
+	int threadNum;
+	Node *node=NULL;
+	Thread **threadarr=NULL;
 
-// 	threadNum = threads->count;
-// 	threadarr = malloc(sizeof(Thread*)*threadNum);
+	threadNum = threads->count;
+	threadarr = malloc(sizeof(Thread*)*threadNum);
 
-// 	/*Add threads from all processes to array*/
-// 	for (int i=1;i<=threadNum;i++){
-// 		node = getNode(threads,i);
-// 		threadarr[i-1] = getData(node);
-// 	}
+	/*Add threads from all processes to array*/
+	for (int i=1;i<=threadNum;i++){
+		node = getNode(threads,i);
+		threadarr[i-1] = getData(node);
+	}
 
-// 	/*Empty list to allow for restorage*/
-// 	for (int i=1;i<=threadNum;i++){
-// 		removeSoft(threads,1);
-// 	}
+	/*Empty list to allow for restorage*/
+	for (int i=1;i<=threadNum;i++){
+		removeSoft(threads,1);
+	}
 	
-// 	/*Sort the array of thread nodes*/
-// 	qsort(threadarr,threadNum,sizeof(Thread*),threadCmp);
+	/*Sort the array of thread nodes*/
+	qsort(threadarr,threadNum,sizeof(Thread*),threadCmp);
 
-// 	/*Push sorted thread nodes into queue*/
-// 	for (int i=0;i<threadNum;i++){
-// 		push(threads,threadarr[i]);
-// 	}
+	/*Push sorted thread nodes into queue*/
+	for (int i=0;i<threadNum;i++){
+		push(threads,threadarr[i]);
+	}
 
-// 	free(threadarr);
-// }
+	free(threadarr);
+}
 
 static void printThreadRes(void *data){
 	Thread *thread = (Thread*)data;
@@ -550,23 +550,33 @@ static void initSimulationRes(SimulationRes *res){
 static void updateReadyQueue(List *arrival,List *ready
 	, int curTime){
 	Thread *curThread;
-	int arrivalSize,done[arrival->count];
+	int arrivalSize,done[arrival->count+1];
 
 	arrivalSize = arrival->count;
 
-	for (int i=0;i<arrivalSize;i++){
+	for (int i=0;i<=arrivalSize;i++){
 		done[i] = 0;
 	}
 
 	for (int i=1;i<=arrivalSize;i++){
 		curThread = getData(getNode(arrival,i));
+
 		if (curThread->arrivalTm == curTime){
 			done[i-1] = 1;
 		}
 	}
 
-	for (int i=0;i<arrivalSize;i++){
-		push(events,pop(arrival));
+	for (int i=1;i<=arrivalSize;i++){
+		if (done[i-1]){
+			push(ready,getData(getNode(arrival,i)));
+			curThread = getData(getNode(arrival,i));
+			curThread->readyTime = curTime;
+		}
+	}
+	for (int i=arrivalSize;i>=1;i--){
+		if (done[i-1]){
+			removeSoft(arrival,i);
+		}
 	}
 }
 
@@ -601,39 +611,39 @@ static void simIO(List *waitingList,List *readyQueue
 			/*Remove burst if no cpu time left*/
 			if (curBurst->cpuTm == 0){
 				push(curThread->finished,pop(curBurstList));
-			}
 
-			/*Check if thread is complete*/
-			if (curBurst->cpuTm == 0
-				&& curBurstList->count == 0){
+				/*Check if thread is complete*/
+				if (curBurstList->count == 0){
 
-				/*Create state event, set, and add to list*/
-				curStateEvent = malloc(sizeof(StateEvent));
-				from = blocked;
-				to = terminated;
-				setStateEvent(curStateEvent,curTime
-					,curThread->threadNum
-					,curThread->processNum,from,to);
-				push(stateEvents,curStateEvent);
+					/*Create state event, set, and add to list*/
+					curStateEvent = malloc(sizeof(StateEvent));
+					from = blocked;
+					to = terminated;
+					setStateEvent(curStateEvent,curTime
+						,curThread->threadNum
+						,curThread->processNum,from,to);
+					push(stateEvents,curStateEvent);
 
-				push(finished,curThread);
-				removed[i-1] = 1;
-			}
-			/*Add thread to ready queue if it has cpu time left
-			or more bursts exists*/
-			else{
+					push(finished,curThread);
+					removed[i-1] = 1;
+				}
+				/*Add thread to ready queue if it has cpu time left
+				or more bursts exists*/
+				else{
 
-				/*Create state event, set, and add to list*/
-				curStateEvent = malloc(sizeof(StateEvent));
-				from = blocked;
-				to = ready;
-				setStateEvent(curStateEvent,curTime
-					,curThread->threadNum
-					,curThread->processNum,from,to);
-				push(stateEvents,curStateEvent);
+					/*Create state event, set, and add to list*/
+					curStateEvent = malloc(sizeof(StateEvent));
+					from = blocked;
+					to = ready;
+					setStateEvent(curStateEvent,curTime
+						,curThread->threadNum
+						,curThread->processNum,from,to);
+					push(stateEvents,curStateEvent);
 
-				push(readyQueue,curThread);
-				removed[i-1] = 1;
+					curThread->readyTime = curTime;
+					push(readyQueue,curThread);
+					removed[i-1] = 1;
+				}
 			}
 		}
 		else{
@@ -662,46 +672,54 @@ static SimulationRes *runSim(Simulation *data){
 	bool newThread = true;
 	List *waitingList=NULL;
 	List *doneIOList=NULL;
-	List *eventList=NULL;
 	List *curBurstList;
 	List *finished;
 	List *stateEvents;
 	List *arrivalList;
 	List *readyQueue;
 	Burst *curBurst;
-	Thread *curThread,*checkThread;
+	Thread *curThread,*checkThread,*doneThread;
 	SimulationRes *res;
 	StateEvent *curStateEvent;
 	SimState to,from;
 
 	/*Initialize lists*/
 	createList(&waitingList);
-	createList(&doneIOListList);
+	createList(&doneIOList);
 	createList(&finished);
 	createList(&stateEvents);
-	eventList = data->threads;
+	createList(&readyQueue);
+	arrivalList = data->threads;
 
 
 	/*Simulate while threads not done running*/
-	while (!empty(readyQueue) || !empty(waitingList)){
+	while (!empty(readyQueue) || !empty(waitingList)
+		|| !empty(arrivalList)){
 
+		/*Check for any arriving threads*/
+		updateReadyQueue(arrivalList,readyQueue,curTime);
+		
 		/*Add events that made it to the ready queue
 		from the previous turn. This is being done here
 		to prevent a thread from getting an I/O turn
 		and a cpu turn in the same time unit*/
 		readySize = doneIOList->count;
 		for (int i=1;i<=readySize;i++){
-			push(readyQueue,pop(doneIOList));
+			/*Update time thread made it to ready queue*/
+			doneThread = pop(doneIOList);
+			doneThread->readyTime = curTime;
+			push(readyQueue,doneThread);
 		}
+		sortThreads(readyQueue);
 
 		/*Simulate I/O*/
 		simIO(waitingList,doneIOList,finished,stateEvents,curTime);
 
 		/*Simulate events if any exist and no switch is occurring*/
-		if (!empty(eventList) && switchCounter == 0){
+		if (!empty(readyQueue) && switchCounter == 0){
 
 			/*Get top of event queue*/
-			curThread = getData(getHead(eventList));
+			curThread = getData(getHead(readyQueue));
 			curBurstList = curThread->burst;
 			curBurst = getData(getHead(curBurstList));
 			
@@ -715,8 +733,6 @@ static SimulationRes *runSim(Simulation *data){
 					,curThread->threadNum
 					,curThread->processNum,from,to);
 				push(stateEvents,curStateEvent);
-
-				curThread->serviceTm = curTime;
 				newThread = false;
 			}
 			
@@ -738,12 +754,12 @@ static SimulationRes *runSim(Simulation *data){
 					push(stateEvents,curStateEvent);
 
 					prevProcNum = curThread->processNum;
-					push(waitingList,pop(eventList));
+					push(waitingList,pop(readyQueue));
 					newThread = true;
 
 					/*Check if switched same proc or different*/
-					if (!empty(eventList)){
-						checkThread = getTop(eventList);
+					if (!empty(readyQueue)){
+						checkThread = getTop(readyQueue);
 						curProcNum = checkThread->processNum;
 						if (curProcNum != prevProcNum){
 							switchCounter = data->diffSwitchTm;
@@ -757,21 +773,20 @@ static SimulationRes *runSim(Simulation *data){
 				/*Remove burst*/
 				else{
 					push(curThread->finished,pop(curBurstList));
-
 					/*Move to next thread if done*/
 					if (curBurstList->count == 0){
+
 						curThread->finishTm = curTime;
 						curThread->turnTm = 
 							curTime-curThread->arrivalTm;
 						prevProcNum = curThread->processNum;
 					
-						push(finished,pop(eventList));
+						push(finished,pop(readyQueue));
 						newThread = true;
 
-
 						/*Check if switched same proc or different*/
-						if (!empty(eventList)){
-							checkThread = getTop(eventList);
+						if (!empty(readyQueue)){
+							checkThread = getTop(readyQueue);
 							curProcNum = checkThread->processNum;
 							if (curProcNum != prevProcNum){
 								switchCounter = data->diffSwitchTm;
@@ -785,18 +800,29 @@ static SimulationRes *runSim(Simulation *data){
 			}
 			/*If no switch ocurred simulate cpu time*/
 			if (switchCounter == 0){
-				curBurst->cpuTm--;
+				if (!empty(readyQueue)){
+					curBurst->cpuTm--;
+					curThread->serviceTm++;
+				}
+				else{
+					noUtil++;
+				}
+			}
+			else{
+				noUtil++;
 			}
 		}
 		/*Context switch is occurring*/
 		if (switchCounter > 0){
 			switchCounter--;
 		}
-		/*If events are empty than cpu not being utilized*/
-		if (empty(eventList)){
-			noUtil++;
+
+		/*Increase time if not finished*/
+		if (!empty(readyQueue) || !empty(waitingList)
+			|| !empty(arrivalList)){
+			curTime++;
 		}
-		curTime++;
+		printf("noUtil:%d\n",noUtil);
 
 	}
 
@@ -807,7 +833,7 @@ static SimulationRes *runSim(Simulation *data){
 	res->stateEvents = stateEvents;
 	res->thread = finished;
     res->totalTm = curTime;
-	res->cpuUtil = (res->totalTm/(res->totalTm-noUtil))*100;
+	res->cpuUtil = ((double)(res->totalTm-noUtil)/res->totalTm)*100;
 	for (int i=1;i<=res->thread->count;i++){
 		curThread = getData(getNode(res->thread,i));
 		turnTm += curThread->turnTm;
@@ -816,8 +842,9 @@ static SimulationRes *runSim(Simulation *data){
 
 
 	/*Free lists*/
+	freeSoft(&readyQueue);
 	freeSoft(&waitingList);
-	freeSoft(&readyList);
+	freeSoft(&doneIOList);
 
 	return res;
 }
