@@ -1,4 +1,4 @@
-CFLAGS = -std=c99 -Wall -pedantic -g
+CFLAGS = -std=c99 -Wall -pedantic
 CC = gcc
 
 simcpu: simcpu.o list.o

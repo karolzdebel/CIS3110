@@ -1,20 +1,6 @@
 #include "list.h"
 #include "simcpu.h"
 
-static void printThread(void *print){
-	Thread *thread = (Thread*)print;
-	
-	printf("processNum:%d\tthreadNum:%d\tburstCount:%d\treadyTime:%d\tarrivalTm:%d\n"
-		,thread->processNum,thread->threadNum,thread->burstCount,thread->readyTime,thread->arrivalTm);
-}
-
-static void printBurst(void *print){
-	Burst *burst = (Burst*)print;
-
-	printf("burstNum:%d\tcpuTm:%d\tIOTm:%d\n"
-		,burst->burstNum,burst->cpuTm,burst->IOTm);
-}
-
 static bool isEmpty(char *line){
 	for (int i=0;i<strlen(line);i++){
 		if (line[i] != ' ' && line[i] != '\t'){
@@ -366,41 +352,6 @@ static Simulation *fillSimProps(){
 	return sim;
 }
 
-static void printSimulationData(Simulation *sim){
-	Thread *thread;
-	Node *threadNext;
-	Node *burstNext;
-
-	printf("-----Simulation Properties-----\n");
-	printf("processCount:%d\tthreadCount:%d\tsameSwitchTm:%d\tdiffSwitchTm:%d\n"
-		,sim->processCount,sim->threads->count
-		,sim->sameSwitchTm,sim->diffSwitchTm);
-
-	/*Traverse threads and print each one*/
-	threadNext = getHead(sim->threads);
-	if (!threadNext){ return; }
-
-	do{
-		printNode(*threadNext,printThread);
-
-		/*Traverse bursts and print each one*/
-		thread = getData(threadNext);
-		if (thread->burst){
-			burstNext = getHead(thread->burst);	
-			do{
-				printNode(*burstNext,printBurst);
-				burstNext = getNext(burstNext);
-
-			}while(burstNext);
-		}
-
-		threadNext = threadNext->next;
-
-	}while(threadNext);
-
-	printf("----------------------------------\n");
-}
-
 static void freeThreads(void *data){
 	Thread *thread = (Thread*)data;
 
@@ -668,8 +619,8 @@ static void simIO(List *waitingList,List *readyQueue
 
 static SimulationRes *runSim(Simulation *data){
 	int curTime=0,prevProcNum=0,curProcNum=0,switchCounter=0;
-	int noUtil=0,readySize=0,turnTm=0;
-	bool newThread = true;
+	int noUtil=0,readySize=0,turnTm=0,curRunTime=0;
+	bool newThread = true,contSwitch=false;
 	List *waitingList=NULL;
 	List *doneIOList=NULL;
 	List *curBurstList;
@@ -710,7 +661,29 @@ static SimulationRes *runSim(Simulation *data){
 			doneThread->readyTime = curTime;
 			push(readyQueue,doneThread);
 		}
-		sortThreads(readyQueue);
+
+		/*Rearrange ready list according to arrival time*/
+		if (data->type == fcfs){
+			sortThreads(readyQueue);
+		}
+
+		if (contSwitch){
+			checkThread = getData(getHead(readyQueue));
+			prevProcNum = checkThread->processNum;
+
+			push(readyQueue,pop(readyQueue));
+			checkThread = getData(getHead(readyQueue));
+
+			/*Check type of context switch*/
+			if (prevProcNum != checkThread->processNum){
+				switchCounter = data->diffSwitchTm;
+			}
+			else{
+				switchCounter = data->sameSwitchTm;
+			}
+			contSwitch = false;
+			newThread = true;
+		}
 
 		/*Simulate I/O*/
 		simIO(waitingList,doneIOList,finished,stateEvents,curTime);
@@ -755,6 +728,7 @@ static SimulationRes *runSim(Simulation *data){
 
 					prevProcNum = curThread->processNum;
 					push(waitingList,pop(readyQueue));
+					curRunTime = 0;
 					newThread = true;
 
 					/*Check if switched same proc or different*/
@@ -782,6 +756,7 @@ static SimulationRes *runSim(Simulation *data){
 						prevProcNum = curThread->processNum;
 					
 						push(finished,pop(readyQueue));
+						curRunTime = 0;
 						newThread = true;
 
 						/*Check if switched same proc or different*/
@@ -801,16 +776,22 @@ static SimulationRes *runSim(Simulation *data){
 			/*If no switch ocurred simulate cpu time*/
 			if (switchCounter == 0){
 				if (!empty(readyQueue)){
+					curRunTime++;
 					curBurst->cpuTm--;
 					curThread->serviceTm++;
-				}
-				else{
-					noUtil++;
+
+					/*Check for round robin time quantum*/
+					if (switchCounter == 0 && data->type == rr && curTime != 0){
+						if ((double)data->rrQuantum/(double)curRunTime == 1){
+							contSwitch = true;
+						}
+					}
 				}
 			}
-			else{
-				noUtil++;
-			}
+		}
+		
+		if (switchCounter > 0){
+			noUtil++;
 		}
 		/*Context switch is occurring*/
 		if (switchCounter > 0){
@@ -821,9 +802,7 @@ static SimulationRes *runSim(Simulation *data){
 		if (!empty(readyQueue) || !empty(waitingList)
 			|| !empty(arrivalList)){
 			curTime++;
-		}
-		printf("noUtil:%d\n",noUtil);
-
+		}	
 	}
 
 	/*Store results*/
@@ -874,7 +853,13 @@ int main (int argc, char **argv){
 	}
 	/*Get data ready for simulation*/
 	sim = fillSimProps();
-	//sortThreads(sim->threads);
+	if (timeQuant > 0){
+		sim->type = rr;
+		sim->rrQuantum = timeQuant;
+	}
+	else{
+		sim->type = fcfs;
+	}
 
 	/*Run simulation and print results*/
 	res = runSim(sim);
