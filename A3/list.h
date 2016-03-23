@@ -24,7 +24,8 @@ typedef struct List {
  * ARGUMENTS: . List for the element to be added to(List *list).
  *			  . Element to be added(void *add).
  *********************************************************************/
-extern void insert(List *list,void *add,int pos);
+extern void insert(List *list,void *add,int pos
+	,void *(*copyFunct)(void *));
 /*********************************************************************
  * FUNCTION NAME: remove
  * PURPOSE: Remove node from the list and free associated data.
@@ -33,7 +34,7 @@ extern void insert(List *list,void *add,int pos);
  *			  . Function which frees the 
  *				data(void (*freeData)(void *)).
  *********************************************************************/
-extern void remove(List *list,int pos
+extern void removeData(List *list,int pos
 	,void (*freeData)(void *));
 /*********************************************************************
  * FUNCTION NAME: get
@@ -44,7 +45,7 @@ extern void remove(List *list,int pos
  *				data(void (*getCopy)(void *)).
  *********************************************************************/
 extern void *get(List *list, int pos
-	,void (*copyFunct)(void *));
+	,void *(*copyFunct)(void *));
 /*********************************************************************
  * FUNCTION NAME: removeListSoft
  * PURPOSE: Remove node from the list without freeing the data.
@@ -163,7 +164,8 @@ extern void *pop(List *que);
  * ARGUMENTS: . Queue the node is being added to(Queue *queue).
  *			  . Node that is being added to the queue(Node *node).
  *********************************************************************/
-extern void push(List *queue, void *node);
+extern void push(List *queue, void *node
+	,void *(*copyFunct)(void *));
 /*********************************************************************
  * FUNCTION NAME: getTop
  * PURPOSE: Get top of queue.

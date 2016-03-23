@@ -73,7 +73,7 @@ extern void insert(List *list,void *add, int pos
 	list->count++;
 }
 
-extern void remove(List *list,int pos
+extern void removeData(List *list,int pos
 	,void (*freeData)(void *)){
 
 	Node *next,*temp;
@@ -113,7 +113,7 @@ extern void remove(List *list,int pos
 }
 
 extern void *get(List *list, int pos
-	,void (*copyFunct)(void *)){
+	,void *(*copyFunct)(void *)){
 
 	/*Copy of data*/
 	return copyFunct(getData(getNode(list,pos)));
@@ -238,8 +238,9 @@ extern bool empty(List *list){
 	return (list->count == 0);
 }
 
-extern void push(List *que, void *data){	
-	insert(que,data, que->count+1);
+extern void push(List *que, void *data
+	,void *(*copyFunct)(void *)){	
+	insert(que,data, que->count+1,copyFunct);
 }
 
 extern void *pop(List *que){
