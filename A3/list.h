@@ -172,6 +172,6 @@ extern void push(List *queue, void *node
  * ARGUMENTS: . Queue which contains the data(List *queue).
  * RETURNS: . Data associated with the top node(void *).
  *********************************************************************/
-extern void *getTop(List *queue);
+extern void *getTop(List *queue,void *(*copyFunct)(void*));
 #define _LIST_H
 #endif

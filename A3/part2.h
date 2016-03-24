@@ -16,4 +16,14 @@ typedef struct Process{
 	char id;
 	int size;
 	int address;
+	int loads;
 }Process;
+
+//pid loaded, #processes = 5, #holes = 3, %memusage = 41, cumulative%mem = 40
+typedef struct Event{
+	char id;
+	int processes;
+	int holes;
+	double memUse;
+	double cumMemUse;
+}Event;

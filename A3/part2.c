@@ -7,6 +7,20 @@ static void *copyProcess(void *data){
 	copy->id = process->id;
 	copy->size = process->size;
 	copy->address = process->address;
+	copy->loads = process->loads;
+
+	return (void*)copy;
+}
+
+static void *copyEvent(void *data){
+	Event *event = (Event*)data;
+	Event *copy = malloc(sizeof(Event));
+
+	copy->id = event->id;
+	copy->processes = event->processes;
+	copy->holes = event->holes;
+	copy->memUse = event->memUse;
+	copy->cumMemUse = event->cumMemUse;
 
 	return (void*)copy;
 }
@@ -47,6 +61,7 @@ static List *getProcesses(FILE *file){
 		add->id = id;
 		add->size = size;
 		add->address = 0;
+		add->loads = 0;
 
 		push(processes,add,copyProcess);
 
@@ -102,13 +117,26 @@ static int findNext(int start,int memSize, int memory[]){
 		if (memory[i]==_MEM_FREE){
 			memCounter++;
 		}
+		else{ memCounter = 0; }
 		/*Return index since address has been found*/
 		if (memCounter==memSize){
-			return i;
+			return (i+1)-memSize;
 		}
 	}
 
 	return _MEM_FULL;
+}
+
+static void storeMemory(int address,int size, int memory[]){
+	for (int i=address;i<address+size;i++){
+		memory[i] = 1;
+	}
+}
+
+static void clearMemory(int address,int size, int memory[]){
+	for (int i=address;i<address+size;i++){
+		memory[i] = 0;
+	}
 }
 
 static void createMemory(int memory[]){
@@ -117,13 +145,104 @@ static void createMemory(int memory[]){
 	}
 }
 
-static void firstNext(int memory[], List *processes){
-	printf("nothing yet\n");
+static double getCumulativeMem(List *events,int memUse){
+	int total = 0;
+	Event *event;
+	for (int i=0;i<events->count;i++){
+		event = get(events,i,copyEvent);
+		total += event->memUse;
+		free(event);
+	}
+	total+= memUse;
+
+	return (total/((double)events->count));
+}
+
+static Event *createEvent(Process *process,List *events
+		,int memory[], int processCount){
+
+	Event *event = malloc(sizeof(Event));
+
+	event->id = process->id;
+	event->processes = processCount;
+	event->holes = holeCount(memory);
+	event->memUse = memUsage(memory);
+	event->cumMemUse 
+		= getCumulativeMem(events,event->memUse);
+
+	return event;
+
+}
+
+static List *firstNext(int memory[], List *waiting){
+	List *inMemory,*finished,*events;
+	Process *top,*longest,*add;
+	Event *event;
+	int address, processCount=0;
+
+	/*Cannot simulate empty list*/
+	if (empty(waiting)){ return NULL; }
+
+	/*Queue of processes in memory*/
+	createList(&events);
+	createList(&inMemory);
+	createList(&finished);
+	
+	/*While not all processes are finished*/
+	do{
+
+		processCount = inMemory->count+events->count;
+
+		top = getTop(waiting,copyProcess);
+		address = findNext(0,top->size,memory);
+		free(top);
+
+		/*No space for process*/
+		if (address == _MEM_FULL){
+
+			/*Remove longest stored process from memory*/
+			longest = (Process*)pop(inMemory);
+			clearMemory(longest->address,longest->size,memory);
+
+			/*If 3 loads than remove*/
+			if (longest->loads == 3){
+				push(finished,longest,copyProcess);
+				free(longest);
+			}
+			/*Otherwise store in waiting list*/
+			else{
+				push(waiting,longest,copyProcess);	
+				free(longest);	
+			}
+		}
+		/*Space found for process*/
+		else{
+
+			/*Add head of waiting list to memory*/
+			add = (Process*)pop(waiting);
+
+			/*Store event*/
+			event = createEvent(add,events,memory,processCount);
+			push(events,event,copyEvent);
+			free(event);
+
+			add->loads++;
+			storeMemory(add->address,add->size,memory);
+			push(inMemory,add,copyProcess);
+			free(add);
+		}
+
+	}while(!empty(waiting));
+
+	destroyList(&finished,free);
+	destroyList(&inMemory,free);
+
+	return events;
 }
 
 int main(int argc, char **argv){
 	FILE *file;
-	List *processes;
+	List *processes,*events;
 	int memory[_MEM_SIZE];
 
 	if (argc != 2){
@@ -142,6 +261,9 @@ int main(int argc, char **argv){
 
 	createMemory(memory);
 
+	events = firstNext(memory,processes);
+
+	destroyList(&events,free);
 	destroyList(&processes,free);
 
 	return EXIT_SUCCESS;

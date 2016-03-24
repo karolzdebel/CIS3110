@@ -249,6 +249,6 @@ extern void *pop(List *que){
 	return data;
 }
 
-extern void *getTop(List *queue){
-	return getData(queue->first);
+extern void *getTop(List *queue,void *(*copyFunct)(void*)){
+	return get(queue,1,copyFunct);
 }
