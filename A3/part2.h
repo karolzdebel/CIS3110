@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define _MEM_FULL -1
+#define _MEM_FREE 0
+#define _MEM_TAKEN 1
 #define _MEM_SIZE 128
 #define _SIZE_LINE 128
 #define _ERR0_MSG "Error: invalid number of arguments. Use following syntax: \"./holes [filename]\"\n"
@@ -12,4 +15,5 @@
 typedef struct Process{
 	char id;
 	int size;
+	int address;
 }Process;
