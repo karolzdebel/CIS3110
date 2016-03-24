@@ -79,8 +79,8 @@ static int holeCount(int memory[]){
 
 		/*If gap is found between blocks or block and 
 		end of memory than increaes hole counter*/
-		if (memory[i]==_MEM_TAKEN 
-			&& (memory[i-1]==_MEM_FREE || i==(_MEM_SIZE-1))){
+		if ( (memory[i]==_MEM_TAKEN || i==(_MEM_SIZE-1) )
+			&& (memory[i-1]==_MEM_FREE) ){
 			count++;
 		}
 	}
@@ -90,22 +90,13 @@ static int holeCount(int memory[]){
 static double memUsage(int memory[]){
 	int count=0;
 
-	for (int i=1;i<_MEM_SIZE;i++){
+	for (int i=0;i<_MEM_SIZE;i++){
 		if (memory[i]==_MEM_TAKEN){
 			count++;
 		}
 	}
 
 	return (((double)count)/((double)_MEM_SIZE))*100;
-}
-
-static double getAverage(double values[],int size){
-	double total=0;
-	for (int i=0;i<size;i++){
-		total+=values[i];
-	}
-
-	return (total/((double)size)); 
 }
 
 static int findNext(int start,int memSize, int memory[]){
@@ -145,17 +136,17 @@ static void createMemory(int memory[]){
 	}
 }
 
-static double getCumulativeMem(List *events,int memUse){
-	int total = 0;
+static double getCumulativeMem(List *events, double memUse){
+	double total = 0;
 	Event *event;
 	for (int i=0;i<events->count;i++){
 		event = get(events,i,copyEvent);
 		total += event->memUse;
 		free(event);
 	}
-	total+= memUse;
+	total += memUse;
 
-	return (total/((double)events->count));
+	return (total/((double)(events->count+1)));
 }
 
 static Event *createEvent(Process *process,List *events
@@ -191,7 +182,7 @@ static List *firstNext(int memory[], List *waiting){
 	/*While not all processes are finished*/
 	do{
 
-		processCount = inMemory->count+events->count;
+		processCount = inMemory->count+waiting->count;
 
 		top = getTop(waiting,copyProcess);
 		address = findNext(0,top->size,memory);
@@ -220,15 +211,16 @@ static List *firstNext(int memory[], List *waiting){
 
 			/*Add head of waiting list to memory*/
 			add = (Process*)pop(waiting);
+			add->loads++;
+			add->address = address;
+			storeMemory(add->address,add->size,memory);
+			push(inMemory,add,copyProcess);
 
 			/*Store event*/
 			event = createEvent(add,events,memory,processCount);
 			push(events,event,copyEvent);
 			free(event);
 
-			add->loads++;
-			storeMemory(add->address,add->size,memory);
-			push(inMemory,add,copyProcess);
 			free(add);
 		}
 
@@ -238,6 +230,23 @@ static List *firstNext(int memory[], List *waiting){
 	destroyList(&inMemory,free);
 
 	return events;
+}
+
+static void printEvents(List *events){
+	Event *event;
+
+	for (int i=1;i<=events->count;i++){
+		event = get(events,i,copyEvent);
+
+		printf("%c loaded, #processes = %d"
+		", $holes = %d, %%memusage = %.1lf"
+		", cumulative%%mem = %.1lf\n"
+		,event->id,event->processes
+		,event->holes,event->memUse
+		,event->cumMemUse);		
+
+		free(event);
+	}
 }
 
 int main(int argc, char **argv){
@@ -262,6 +271,7 @@ int main(int argc, char **argv){
 	createMemory(memory);
 
 	events = firstNext(memory,processes);
+	printEvents(events);
 
 	destroyList(&events,free);
 	destroyList(&processes,free);
