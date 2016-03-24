@@ -126,27 +126,22 @@ static int worstAdd(int memSize, int memory[]){
 	/*Find biggest hole*/
 	for (int i=0;i<_MEM_SIZE;i++){
 		
-		/*Look for empty memory*/
-		if (memory[i]==_MEM_FREE){
-			memCounter++;
-		}
 		/*Check if its a hole*/
-		else if (memCounter > 0){
+		if ( (memCounter > 0 && memory[i] == _MEM_FULL)
+			|| (memCounter > 0 && i == _MEM_SIZE-1) ){
 
 			/*Check if hole is larger*/
 			if (memCounter > max){
 				max = i-memCounter;
 				maxSize = memCounter;
-				printf("max:%d maxSize:%d\n",max,maxSize);
 			}
 			memCounter = 0;
 		}
-	}
 
-	/*Check for completely empty memort*/
-	if (memCounter == _MEM_SIZE){
-		max = 0;
-		maxSize = _MEM_SIZE;
+		/*Look for empty memory*/
+		if (memory[i]==_MEM_FREE){
+			memCounter++;
+		}
 	}
 
 	/*Check if the largest hole is 
@@ -160,38 +155,35 @@ static int worstAdd(int memSize, int memory[]){
 }
 
 static int bestAdd(int memSize, int memory[]){
-	int closest=_MEM_FULL;
+	int closest=_MEM_SIZE+1;
 	int memCounter=0;
 
 	/*Find hole size closest to memSize*/
 	for (int i=0;i<_MEM_SIZE;i++){
 		
-		/*Look for empty memory*/
-		if (memory[i]==_MEM_FREE){
-			memCounter++;
-		}
 		/*Check if its a hole*/
-		else if (memCounter > 0){
+		if ((memory[i] == _MEM_FULL && memCounter > 0)
+			|| (i==_MEM_SIZE-1 && memCounter > 0)){
 
 			/*Check if hole is closer to size*/
-			if (memCounter > memSize 
+			if (memCounter >= memSize 
 				&& memCounter < closest){
-
 				/*Store address*/
 				closest = i-memCounter;
 			}
 			memCounter = 0;
 		}
+
+		/*Look for empty memory*/
+		if (memory[i]==_MEM_FREE){
+			memCounter++;
+		}
 	}
 
-	/*Check for completely empty memory*/
-	if (memCounter == _MEM_SIZE){
-		closest = 0;
-
-		/*Make sure process memory not larger*/
-		if (memSize > _MEM_SIZE){
-			closest = _MEM_FULL;
-		}
+	/*Check if space was found by checking if
+	"closest" variable changed value*/
+	if (closest == _MEM_SIZE+1){
+		closest = _MEM_FULL;
 	}
 
 	return closest;
@@ -307,7 +299,6 @@ static List *memSim(int memory[], List *waiting, int type){
 				break;
 			case _BEST_FIT:
 				address = bestAdd(top->size,memory);
-				printf("address:%d\n",address);
 				break;
 			case _NEXT_FIT:
 				address = findNextAdd(address,top->size,memory);
