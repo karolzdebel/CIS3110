@@ -99,10 +99,10 @@ static double memUsage(int memory[]){
 	return (((double)count)/((double)_MEM_SIZE))*100;
 }
 
-static int findNext(int start,int memSize, int memory[]){
+static int firstNextAdd(int memSize, int memory[]){
 	int memCounter=0;
 
-	for (int i=start;i<_MEM_SIZE;i++){
+	for (int i=0;i<_MEM_SIZE;i++){
 		
 		/*Look for empty memory*/
 		if (memory[i]==_MEM_FREE){
@@ -115,6 +115,120 @@ static int findNext(int start,int memSize, int memory[]){
 		}
 	}
 
+	return _MEM_FULL;
+}
+
+static int worstAdd(int memSize, int memory[]){
+	int max=_MEM_FULL;
+	int maxSize=0;
+	int memCounter=0;
+
+	/*Find biggest hole*/
+	for (int i=0;i<_MEM_SIZE;i++){
+		
+		/*Look for empty memory*/
+		if (memory[i]==_MEM_FREE){
+			memCounter++;
+		}
+		/*Check if its a hole*/
+		else if (memCounter > 0){
+
+			/*Check if hole is larger*/
+			if (memCounter > max){
+				max = i-memCounter;
+				maxSize = memCounter;
+				printf("max:%d maxSize:%d\n",max,maxSize);
+			}
+			memCounter = 0;
+		}
+	}
+
+	/*Check for completely empty memort*/
+	if (memCounter == _MEM_SIZE){
+		max = 0;
+		maxSize = _MEM_SIZE;
+	}
+
+	/*Check if the largest hole is 
+	large enough for process if not than 
+	no hole can fit the process*/
+	if (memSize > maxSize){
+		return _MEM_FULL;
+	}
+
+	return max;
+}
+
+static int bestAdd(int memSize, int memory[]){
+	int closest=_MEM_FULL;
+	int memCounter=0;
+
+	/*Find hole size closest to memSize*/
+	for (int i=0;i<_MEM_SIZE;i++){
+		
+		/*Look for empty memory*/
+		if (memory[i]==_MEM_FREE){
+			memCounter++;
+		}
+		/*Check if its a hole*/
+		else if (memCounter > 0){
+
+			/*Check if hole is closer to size*/
+			if (memCounter > memSize 
+				&& memCounter < closest){
+
+				/*Store address*/
+				closest = i-memCounter;
+			}
+			memCounter = 0;
+		}
+	}
+
+	/*Check for completely empty memory*/
+	if (memCounter == _MEM_SIZE){
+		closest = 0;
+
+		/*Make sure process memory not larger*/
+		if (memSize > _MEM_SIZE){
+			closest = _MEM_FULL;
+		}
+	}
+
+	return closest;
+}
+
+static int findNextAdd(int start, int memSize, int memory[]){
+	int memCounter=0;
+
+	/*Look from starting address till end*/
+	for (int i=start;i<_MEM_SIZE;i++){
+
+		/*Look for empty memory*/
+		if (memory[i]==_MEM_FREE){
+			memCounter++;
+		}
+		else{ memCounter = 0; }
+		/*Return index since address has been found*/
+		if (memCounter==memSize){
+			return (i+1)-memSize;
+		}
+	}
+
+	/*Loop back to address 0 and proceed 
+	till where started*/
+	memCounter = 0;
+	for (int i=0;i<start;i++){
+
+		/*Look for empty memory*/
+		if (memory[i]==_MEM_FREE){
+			memCounter++;
+		}
+		else{ memCounter = 0; }
+		/*Return index since address has been found*/
+		if (memCounter==memSize){
+			return (i+1)-memSize;
+		}
+	}
 	return _MEM_FULL;
 }
 
@@ -165,11 +279,11 @@ static Event *createEvent(Process *process,List *events
 
 }
 
-static List *firstNext(int memory[], List *waiting){
+static List *memSim(int memory[], List *waiting, int type){
 	List *inMemory,*finished,*events;
 	Process *top,*longest,*add;
 	Event *event;
-	int address, processCount=0;
+	int address=0, processCount=0;
 
 	/*Cannot simulate empty list*/
 	if (empty(waiting)){ return NULL; }
@@ -185,11 +299,30 @@ static List *firstNext(int memory[], List *waiting){
 		processCount = inMemory->count+waiting->count;
 
 		top = getTop(waiting,copyProcess);
-		address = findNext(0,top->size,memory);
+
+		/*Get address based on the type of simulation*/
+		switch(type){
+			case _FIRST_FIT:
+				address = firstNextAdd(top->size,memory);
+				break;
+			case _BEST_FIT:
+				address = bestAdd(top->size,memory);
+				printf("address:%d\n",address);
+				break;
+			case _NEXT_FIT:
+				address = findNextAdd(address,top->size,memory);
+				break;
+			case _WORST_FIT:
+				address = worstAdd(top->size,memory);
+				break;
+		}
+
 		free(top);
 
 		/*No space for process*/
 		if (address == _MEM_FULL){
+			/*Reset address to start*/
+			address = 0;
 
 			/*Remove longest stored process from memory*/
 			longest = (Process*)pop(inMemory);
@@ -232,6 +365,43 @@ static List *firstNext(int memory[], List *waiting){
 	return events;
 }
 
+static double holesAvg(List *events){
+	double total=0;
+	Event *event;
+
+	for (int i=0;i<events->count;i++){
+		event = get(events,i,copyEvent);
+		total+= event->holes;
+
+		free(event);
+	}
+
+	return total/((double)events->count);
+}
+
+static double findCumMem(List *events){
+	double mem = 0.0;
+	Event *event = get(events,events->count,copyEvent); 
+	
+	mem = event->cumMemUse;
+	free(event);
+	return mem;
+}
+
+static double processesAvg(List *events){
+	double total=0;
+	Event *event;
+
+	for (int i=0;i<events->count;i++){
+		event = get(events,i,copyEvent);
+		total+= event->processes;
+
+		free(event);
+	}
+
+	return total/((double)events->count);
+}
+
 static void printEvents(List *events){
 	Event *event;
 
@@ -239,20 +409,76 @@ static void printEvents(List *events){
 		event = get(events,i,copyEvent);
 
 		printf("%c loaded, #processes = %d"
-		", $holes = %d, %%memusage = %.1lf"
-		", cumulative%%mem = %.1lf\n"
-		,event->id,event->processes
-		,event->holes,event->memUse
-		,event->cumMemUse);		
+			", $holes = %d, %%memusage = %.1lf"
+			", cumulative%%mem = %.1lf\n"
+			,event->id,event->processes
+			,event->holes,event->memUse
+			,event->cumMemUse);		
 
 		free(event);
 	}
+
+	printf("\nTotal loads = %d"
+		", average #processes = %.1lf"
+		", average #holes = %.1lf"
+		", cumulative %%mem = %.1lf\n"
+		,events->count,processesAvg(events)
+		,holesAvg(events),findCumMem(events));
+}
+
+static void printProcesses(List *processes){
+	Process *process;
+
+	for (int i=1;i<=processes->count;i++){
+		process = get(processes,i,copyProcess);
+
+		free(process);
+	}
+}
+
+static void simulate(List *processes,int type){
+	int memory[_MEM_SIZE];
+	List *events,*simProcesses;
+
+	/*Create empty memory*/
+	createMemory(memory);
+
+	switch(type){
+		case _NEXT_FIT:
+			printf("\n\n-----Next Fit Results-----\n");
+			break;
+		case _BEST_FIT:
+			printf("\n\n-----Best Fit Results-----\n");
+			break;
+		case _FIRST_FIT:
+			printf("\n\n-----First Fit Results-----\n");
+			break;
+		case _WORST_FIT:
+			printf("\n\n-----Worst Fit Results-----\n");
+			break;
+	}
+
+	/*Simulate*/
+	simProcesses = copyList(processes,copyProcess);
+
+	events = memSim(memory,simProcesses,type);
+	/*Nothing returned, don't proceed*/
+	if (!events){
+		fprintf(stdout,"Simulation returned no loads/events.\n");
+		
+		destroyList(&events,free);
+		destroyList(&simProcesses,free);
+		return;
+	}
+	
+	printEvents(events);
+	destroyList(&events,free);
+	destroyList(&simProcesses,free);
 }
 
 int main(int argc, char **argv){
 	FILE *file;
-	List *processes,*events;
-	int memory[_MEM_SIZE];
+	List *processes;
 
 	if (argc != 2){
 		fprintf(stderr,_ERR0_MSG);
@@ -268,12 +494,11 @@ int main(int argc, char **argv){
 	processes = getProcesses(file);
 	fclose(file);
 
-	createMemory(memory);
+	simulate(processes,_FIRST_FIT);
+	simulate(processes,_BEST_FIT);
+	simulate(processes,_NEXT_FIT);
+	simulate(processes,_WORST_FIT);
 
-	events = firstNext(memory,processes);
-	printEvents(events);
-
-	destroyList(&events,free);
 	destroyList(&processes,free);
 
 	return EXIT_SUCCESS;

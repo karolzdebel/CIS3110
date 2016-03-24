@@ -68,6 +68,10 @@ extern void createList(List **list);
  *********************************************************************/
 extern void mergeList(List *list, List *add);
 /*********************************************************************
+ * FUNCTION NAME: copyList
+ *********************************************************************/
+extern List *copyList(List *list, void *(*copyFunct)(void*));
+/*********************************************************************
  * FUNCTION NAME: getListNode
  * PURPOSE: Get any node in the list.
  * ARGUMENTS: . List which contains the node (List **list).

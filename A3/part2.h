@@ -4,6 +4,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define _BEST_FIT 1
+#define _FIRST_FIT 2
+#define _NEXT_FIT 3
+#define _WORST_FIT 4
 #define _MEM_FULL -1
 #define _MEM_FREE 0
 #define _MEM_TAKEN 1

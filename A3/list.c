@@ -252,3 +252,16 @@ extern void *pop(List *que){
 extern void *getTop(List *queue,void *(*copyFunct)(void*)){
 	return get(queue,1,copyFunct);
 }
+
+extern List *copyList(List *list, void *(*copyFunct)(void*)){
+	List *copy;
+	void *data;
+
+	createList(&copy);
+	for (int i=1;i<=list->count;i++){
+		data = get(list,i,copyFunct);
+		push(copy,data,copyFunct);
+		free(data);
+	}
+	return copy;
+}
