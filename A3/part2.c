@@ -410,16 +410,6 @@ static void printEvents(List *events){
 		,holesAvg(events),findCumMem(events));
 }
 
-static void printProcesses(List *processes){
-	Process *process;
-
-	for (int i=1;i<=processes->count;i++){
-		process = get(processes,i,copyProcess);
-
-		free(process);
-	}
-}
-
 static void simulate(List *processes,int type){
 	int memory[_MEM_SIZE];
 	List *events,*simProcesses;
