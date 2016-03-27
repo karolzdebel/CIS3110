@@ -127,11 +127,11 @@ static int worstAdd(int memSize, int memory[]){
 	for (int i=0;i<_MEM_SIZE;i++){
 		
 		/*Check if its a hole*/
-		if ( (memCounter > 0 && memory[i] == _MEM_FULL)
+		if ( (memCounter > 0 && memory[i] == _MEM_TAKEN)
 			|| (memCounter > 0 && i == _MEM_SIZE-1) ){
 
 			/*Check if hole is larger*/
-			if (memCounter > max){
+			if (memCounter > maxSize){
 				max = i-memCounter;
 				maxSize = memCounter;
 			}
@@ -155,21 +155,23 @@ static int worstAdd(int memSize, int memory[]){
 }
 
 static int bestAdd(int memSize, int memory[]){
-	int closest=_MEM_SIZE+1;
+	int closestAdd=_MEM_FULL;
+	int closestSize=_MEM_SIZE+1;
 	int memCounter=0;
 
 	/*Find hole size closest to memSize*/
 	for (int i=0;i<_MEM_SIZE;i++){
 		
 		/*Check if its a hole*/
-		if ((memory[i] == _MEM_FULL && memCounter > 0)
+		if ((memory[i] == _MEM_TAKEN && memCounter > 0)
 			|| (i==_MEM_SIZE-1 && memCounter > 0)){
 
 			/*Check if hole is closer to size*/
 			if (memCounter >= memSize 
-				&& memCounter < closest){
+				&& memCounter < closestSize){
 				/*Store address*/
-				closest = i-memCounter;
+				closestSize = memCounter;
+				closestAdd = i-memCounter;
 			}
 			memCounter = 0;
 		}
@@ -180,13 +182,7 @@ static int bestAdd(int memSize, int memory[]){
 		}
 	}
 
-	/*Check if space was found by checking if
-	"closest" variable changed value*/
-	if (closest == _MEM_SIZE+1){
-		closest = _MEM_FULL;
-	}
-
-	return closest;
+	return closestAdd;
 }
 
 static int findNextAdd(int start, int memSize, int memory[]){
@@ -245,7 +241,7 @@ static void createMemory(int memory[]){
 static double getCumulativeMem(List *events, double memUse){
 	double total = 0;
 	Event *event;
-	for (int i=0;i<events->count;i++){
+	for (int i=1;i<=events->count;i++){
 		event = get(events,i,copyEvent);
 		total += event->memUse;
 		free(event);
@@ -265,7 +261,7 @@ static Event *createEvent(Process *process,List *events
 	event->holes = holeCount(memory);
 	event->memUse = memUsage(memory);
 	event->cumMemUse 
-		= getCumulativeMem(events,event->memUse);
+		= getCumulativeMem(events,memUsage(memory));
 
 	return event;
 
@@ -275,7 +271,7 @@ static List *memSim(int memory[], List *waiting, int type){
 	List *inMemory,*finished,*events;
 	Process *top,*longest,*add;
 	Event *event;
-	int address=0, processCount=0;
+	int address=0;
 
 	/*Cannot simulate empty list*/
 	if (empty(waiting)){ return NULL; }
@@ -287,9 +283,6 @@ static List *memSim(int memory[], List *waiting, int type){
 	
 	/*While not all processes are finished*/
 	do{
-
-		processCount = inMemory->count+waiting->count;
-
 		top = getTop(waiting,copyProcess);
 
 		/*Get address based on the type of simulation*/
@@ -341,7 +334,7 @@ static List *memSim(int memory[], List *waiting, int type){
 			push(inMemory,add,copyProcess);
 
 			/*Store event*/
-			event = createEvent(add,events,memory,processCount);
+			event = createEvent(add,events,memory,inMemory->count);
 			push(events,event,copyEvent);
 			free(event);
 
@@ -360,7 +353,7 @@ static double holesAvg(List *events){
 	double total=0;
 	Event *event;
 
-	for (int i=0;i<events->count;i++){
+	for (int i=1;i<=events->count;i++){
 		event = get(events,i,copyEvent);
 		total+= event->holes;
 
@@ -383,7 +376,7 @@ static double processesAvg(List *events){
 	double total=0;
 	Event *event;
 
-	for (int i=0;i<events->count;i++){
+	for (int i=1;i<=events->count;i++){
 		event = get(events,i,copyEvent);
 		total+= event->processes;
 
