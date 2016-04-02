@@ -1,0 +1,116 @@
+
+
+-----First Fit Results-----
+A loaded, #processes = 1, $holes = 1, %memusage = 10.2, cumulative%mem = 10.2
+B loaded, #processes = 2, $holes = 1, %memusage = 87.5, cumulative%mem = 48.8
+C loaded, #processes = 3, $holes = 1, %memusage = 89.1, cumulative%mem = 62.2
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 69.3
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 63.0
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 62.9
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 63.1
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 64.1
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 66.0
+B loaded, #processes = 1, $holes = 1, %memusage = 77.3, cumulative%mem = 67.1
+C loaded, #processes = 2, $holes = 1, %memusage = 78.9, cumulative%mem = 68.2
+D loaded, #processes = 3, $holes = 1, %memusage = 80.5, cumulative%mem = 69.2
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 66.8
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 66.5
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 66.3
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 66.6
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 67.5
+B loaded, #processes = 2, $holes = 2, %memusage = 87.5, cumulative%mem = 68.6
+C loaded, #processes = 3, $holes = 2, %memusage = 89.1, cumulative%mem = 69.7
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 70.7
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 69.1
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 68.8
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 68.6
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 68.7
+
+Total loads = 24, average #processes = 3.9, average #holes = 1.7, cumulative %mem = 68.7
+
+
+-----Best Fit Results-----
+A loaded, #processes = 1, $holes = 1, %memusage = 10.2, cumulative%mem = 10.2
+B loaded, #processes = 2, $holes = 1, %memusage = 87.5, cumulative%mem = 48.8
+C loaded, #processes = 3, $holes = 1, %memusage = 89.1, cumulative%mem = 62.2
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 69.3
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 63.0
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 62.9
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 63.1
+H loaded, #processes = 6, $holes = 1, %memusage = 71.1, cumulative%mem = 64.1
+A loaded, #processes = 7, $holes = 1, %memusage = 81.2, cumulative%mem = 66.0
+B loaded, #processes = 1, $holes = 1, %memusage = 77.3, cumulative%mem = 67.1
+C loaded, #processes = 2, $holes = 1, %memusage = 78.9, cumulative%mem = 68.2
+D loaded, #processes = 3, $holes = 1, %memusage = 80.5, cumulative%mem = 69.2
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 66.8
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 66.5
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 66.3
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 66.6
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 67.5
+B loaded, #processes = 2, $holes = 2, %memusage = 87.5, cumulative%mem = 68.6
+C loaded, #processes = 3, $holes = 2, %memusage = 89.1, cumulative%mem = 69.7
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 70.7
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 69.1
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 68.8
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 68.6
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 68.7
+
+Total loads = 24, average #processes = 3.9, average #holes = 1.6, cumulative %mem = 68.7
+
+
+-----Next Fit Results-----
+A loaded, #processes = 1, $holes = 1, %memusage = 10.2, cumulative%mem = 10.2
+B loaded, #processes = 2, $holes = 1, %memusage = 87.5, cumulative%mem = 48.8
+C loaded, #processes = 3, $holes = 1, %memusage = 89.1, cumulative%mem = 62.2
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 69.3
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 63.0
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 62.9
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 63.1
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 64.1
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 66.0
+B loaded, #processes = 1, $holes = 1, %memusage = 77.3, cumulative%mem = 67.1
+C loaded, #processes = 2, $holes = 1, %memusage = 78.9, cumulative%mem = 68.2
+D loaded, #processes = 3, $holes = 1, %memusage = 80.5, cumulative%mem = 69.2
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 66.8
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 66.5
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 66.3
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 66.6
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 67.5
+B loaded, #processes = 2, $holes = 2, %memusage = 87.5, cumulative%mem = 68.6
+C loaded, #processes = 3, $holes = 2, %memusage = 89.1, cumulative%mem = 69.7
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 70.7
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 69.1
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 68.8
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 68.6
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 68.7
+
+Total loads = 24, average #processes = 3.9, average #holes = 1.7, cumulative %mem = 68.7
+
+
+-----Worst Fit Results-----
+A loaded, #processes = 1, $holes = 1, %memusage = 10.2, cumulative%mem = 10.2
+B loaded, #processes = 2, $holes = 1, %memusage = 87.5, cumulative%mem = 48.8
+C loaded, #processes = 3, $holes = 1, %memusage = 89.1, cumulative%mem = 62.2
+D loaded, #processes = 4, $holes = 1, %memusage = 90.6, cumulative%mem = 69.3
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 63.0
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 62.9
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 63.1
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 64.1
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 66.0
+B loaded, #processes = 1, $holes = 1, %memusage = 77.3, cumulative%mem = 67.1
+C loaded, #processes = 2, $holes = 1, %memusage = 78.9, cumulative%mem = 68.2
+D loaded, #processes = 3, $holes = 1, %memusage = 80.5, cumulative%mem = 69.2
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 66.8
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 66.5
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 66.3
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 66.6
+A loaded, #processes = 7, $holes = 2, %memusage = 81.2, cumulative%mem = 67.5
+B loaded, #processes = 2, $holes = 2, %memusage = 87.5, cumulative%mem = 68.6
+C loaded, #processes = 3, $holes = 2, %memusage = 89.1, cumulative%mem = 69.7
+D loaded, #processes = 4, $holes = 2, %memusage = 90.6, cumulative%mem = 70.7
+E loaded, #processes = 3, $holes = 2, %memusage = 37.5, cumulative%mem = 69.1
+F loaded, #processes = 4, $holes = 2, %memusage = 62.5, cumulative%mem = 68.8
+G loaded, #processes = 5, $holes = 2, %memusage = 64.1, cumulative%mem = 68.6
+H loaded, #processes = 6, $holes = 2, %memusage = 71.1, cumulative%mem = 68.7
+
+Total loads = 24, average #processes = 3.9, average #holes = 1.7, cumulative %mem = 68.7
