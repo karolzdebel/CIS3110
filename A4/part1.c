@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define _NANO 1000000000
+#define _MICRO 1000000
+#define _MILI 1000
+
 #define _GBS 1000000000
 #define _MBS 1000000
 #define _KBS 1000
@@ -55,10 +59,10 @@ int main(){
 	
 	/*Small scale testing*/	
 	fp = fopen("smallresults.txt","w+");
-	for (i=0;i<=_KBS*10;i+=100){
+	for (i=1;i<=_KBS*12+1;i+=100){
 		test = testTime(i);
 		
-		fprintf(fp,"%ld, %lf\n",i,test);
+		fprintf(fp,"%ld, %lf\n",i,test*_NANO);
 	}
 	fclose(fp);
 
@@ -66,10 +70,10 @@ int main(){
 
 	/*Medium scale testing*/
 	fp = fopen("mediumresults.txt","w+");
-	for (i=0;i<=_KBS*100;i+=_KBS){
+	for (i=_KBS;i<=_KBS*64;i+=_KBS){
 		test = testTime(i);
 
-		fprintf(fp,"%ld, %lf\n",i/_KBS,test);
+		fprintf(fp,"%ld, %lf\n",i/_KBS,test*_MICRO);
 	}	
 	fclose(fp);
 
@@ -77,10 +81,10 @@ int main(){
 	
 	/*Large scale testing*/
 	fp = fopen("largeresults.txt","w+");
-	for (i=0;i<=_GBS;i+=_MBS*100){
+	for (i=_MBS;i<=_MBS*100+1;i+=_MBS*10){
 		test = testTime(i);
 		
-		fprintf(fp,"%ld, %lf\n",i/_MBS,test);
+		fprintf(fp,"%ld, %lf\n",i/_MBS,test*_MILI);
 	}
 	fclose(fp);
 
